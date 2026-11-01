@@ -4,10 +4,11 @@
 local M={}
 local layout=require("layout")
 local pause_view=require("pause_view")
+local art={}
+for _,name in ipairs(omni.draw.icons()) do art[name]=true end
 -- Retail wheel footprint: left of Ratchet, centre (128,208) in 512x448 HUD space.
 local cx,cy=128,208
 local pressure={0x2000,0x8000,0x1000,0x4000,0x10,0x20,0x40,0x80,4,8,1,2}
-local normal={ [0]=true,[2]=true,[7]=true,[8]=true,[0x13]=true,[0x73]=true }
 local items={
  [8]={"OMNIWRENCH","gadget.omniwrench"},[9]={"SUCK CANNON","weapon.suck_cannon"},
  [10]={"BOMB GLOVE","weapon.bomb_glove"},[11]={"DEVASTATOR","weapon.devastator"},
@@ -52,6 +53,7 @@ end
 -- drawing uses only the loader's supported rectangles and native item icons.
 local bands={}
 local tan=math.tan(math.pi/8)
+if not art["rift.wheel.base"] then
 for y=-92,91 do
     local mid=y+0.5
     local outer=math.sqrt(math.max(0,92*92-mid*mid))
@@ -71,21 +73,31 @@ for y=-92,91 do
         end
     end
 end
+end
 local function draw(w)
     local d=omni.draw
     local layer={layer="menu"}
-    for _,b in ipairs(bands) do
-        local active=b.sector==w.selected
-        local filled=w.slots[b.sector]>1
-        d.rect(cx+b.x,cy+b.y,b.w,1,active and 0x1B6385EC or (filled and 0x0B2135DE or 0x0A182894),layer)
+    if art["rift.wheel.base"] then
+        d.icon(cx-92,cy-92,184,184,"rift.wheel.base",{tint=0xFFFFFFFF,layer="menu"})
+        d.icon(cx-92,cy-92,184,184,"rift.wheel.focus."..(w.selected-1),{tint=0xFFFFFFFF,layer="menu"})
+    else
+        for _,b in ipairs(bands) do
+            local active=b.sector==w.selected
+            local filled=w.slots[b.sector]>1
+            d.rect(cx+b.x,cy+b.y,b.w,1,active and 0x1B6385EC or (filled and 0x0B2135DE or 0x0A182894),layer)
+        end
     end
     for i,id in ipairs(w.slots) do
         local angle=(i-1)*math.pi/4
         local x,y=cx+math.sin(angle)*71,cy-math.cos(angle)*71
         if id>1 then
-            local icon=(items[id] and items[id][2]) or ("item."..id)
-            if string.sub(icon,1,7)=="weapon." then icon..=".hud" end
-            d.icon(x-12,y-12,24,24,icon,{tint=0xFFFFFFFF,layer="menu"})
+            if art["rift.item."..id] then
+                d.icon(x-22,y-22,44,44,"rift.item."..id,{tint=0xFFFFFFFF,layer="menu"})
+            else
+                local icon=(items[id] and items[id][2]) or ("item."..id)
+                if string.sub(icon,1,7)=="weapon." then icon..=".hud" end
+                d.icon(x-12,y-12,24,24,icon,{tint=0xFFFFFFFF,layer="menu"})
+            end
         else
             d.rect(x-2,y-1,4,2,0x637B9560,layer)
         end
@@ -95,28 +107,59 @@ local function draw(w)
             d.rect(ox-3,oy-2,6,4,0x4CE7FFFF,layer)
         end
     end
-    d.text(cx,cy-8,"PAUSIERT",{size=0.42,align="center",color=0xD6F6FFFF,shadow=0x071321FF,layer="menu"})
     local id=w.slots[w.selected]
+    if art["rift.item."..id] then
+        d.text(cx,cy-41,"PAUSIERT",{size=0.4,align="center",color=0xA9D5E8FF,shadow=0x071321FF,layer="menu"})
+        d.icon(cx-31,cy-31,62,62,"rift.item."..id,{tint=0xFFFFFFFF,layer="menu"})
+    else
+        d.text(cx,cy-8,"PAUSIERT",{size=0.42,align="center",color=0xD6F6FFFF,shadow=0x071321FF,layer="menu"})
+    end
     d.text(cx,cy+104,(items[id] and items[id][1]) or ("ITEM "..id),{size=0.46,align="center",color=0xF0FBFFFF,shadow=0x071321FF,layer="menu"})
 end
 
 function M.setup(state)
     local previous,consumed=false,false
     local warned=false
-    local native_ready=nil
+    local native_ready,native_fade=nil,nil
+    local guard_api,guard_field=pcall(function() return omni.fields.omni.rift.wheel_draw_guard end)
+    guard_api=guard_api and type(guard_field)=="number"
+    local function native_guard()
+        return guard_api and omni.fields.omni.rift.wheel_draw_guard==1
+    end
+    local function request_guard()
+        if guard_api then
+            local wanted=omni.setting("pause_wheel") and native_guard() and 1 or 0
+            if omni.fields.omni.rift.hide_original_wheel~=wanted then omni.fields.omni.rift.hide_original_wheel=wanted end
+        end
+    end
     -- Let retail resolve Triangle's contextual action and original hold delay.
     -- Only take over after its own Quick Select HUD has actually begun opening.
     if omni.has("rac1.omni.weapon.quick_select") then
+        omni.before("rac1.omni.weapon.quick_select",function(element)
+            -- Preserve the original opening clock for the update, then hide only
+            -- its drawing fade before the separate HUD draw runs.
+            if native_fade and native_fade.element==element and native_fade.level==omni.level() then
+                omni.write("u8",element+0x70,native_fade.fade)
+            end
+            native_fade=nil
+        end)
         omni.after("rac1.omni.weapon.quick_select",function(element)
-            if not state.wheel and omni.mode()=="gameplay" and element>=0x100000 and element<0x2000000
-                and omni.read("u8",element+0x70)>=8 then
-                native_ready={element=element,level=omni.level()}
-            elseif not state.wheel then native_ready=nil end
+            if element<0x100000 or element>=0x2000000 then native_ready=nil;return end
+            if not omni.setting("pause_wheel") then native_ready=nil;return end
+            local fade=omni.read("u8",element+0x70)
+            if not state.wheel and not consumed and omni.mode()=="gameplay" then
+                native_ready=fade>=8 and {element=element,level=omni.level()} or nil
+                if fade>0 and not native_guard() then native_fade={element=element,level=omni.level(),fade=fade} end
+            else native_ready=nil end
+            if native_guard() then return end
+            -- Includes short taps, fading out, airborne use and the takeover frame.
+            -- A partial original wheel must never flash behind the custom wheel.
+            omni.write("u8",element+0x70,0)
         end)
     end
     if omni.has("rac1.omni.vendor.open") then
         omni.after("rac1.omni.vendor.open",function()
-            native_ready=nil
+            native_ready=nil;native_fade=nil
             -- Vendor opening can animate for a few ticks before mode=vendor.
             -- Once accepted, this same Triangle hold belongs to that interaction.
             if not state.wheel then consumed=true end
@@ -124,6 +167,7 @@ function M.setup(state)
     end
     local function pad(port,r)
         if port~=0 then return end
+        request_guard()
         local down=buttons(r)
         local held=bit32.band(down,0x10)~=0
         local mode=omni.mode()
@@ -141,8 +185,7 @@ function M.setup(state)
         -- The first report always reaches the game, including a fresh press
         -- while an earlier wheel is fading out: vendors/interactions get priority.
         if not w and not consumed and held and previous and native_ready and native_ready.level==omni.level()
-            and omni.setting("pause_wheel") and mode=="gameplay"
-            and normal[omni.fields.hero.state] then
+            and omni.setting("pause_wheel") and mode=="gameplay" then
             local base=layout.hero()
             local slots=base and entries(base) or nil
             if base and slots and omni.read("u8",base+0x20a4)==0 then
@@ -156,7 +199,7 @@ function M.setup(state)
                     -- The custom paused wheel now owns the display and commit.
                     -- Retire retail's fade so it cannot commit a stale selection on resume.
                     omni.write("u8",native_ready.element+0x70,0)
-                    native_ready=nil
+                    native_ready=nil;native_fade=nil
                     omni.log("quick select opening: original native hold accepted")
                     set(r,0x800)
                 else
@@ -190,6 +233,7 @@ function M.setup(state)
     end)
 
     local function frame()
+        request_guard()
         pause_view.scan()
         local w=state.wheel
         if not w then return end

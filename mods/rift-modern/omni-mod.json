@@ -2,9 +2,9 @@
   "format": 2,
   "id": "rift-modern",
   "name": "Rift Modern",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "author": "Taurus0815",
-  "description": "Rift-inspired HUD and complete native menu skin, double-tap shoulder movement, native-timed paused Quick Select and responsive movement for RAC-RS.",
+  "description": "Rift-inspired HUD and menus, paused high-resolution weapon-picture wheel, aim + melee wrench throw and responsive shoulder movement.",
   "license": "MIT",
   "type": "script",
   "api": "1.3",
@@ -29,6 +29,13 @@
     "rac1.omni.vendor.open"
   ],
   "settings": [
+    {
+      "key": "aim_wrench_throw",
+      "name": "Aim + melee: wrench throw",
+      "description": "Hold the real aim action and press melee (Square/X by default) to perform the native Comet Strike. Shoulder-walk alone still uses normal melee. Launcher bindings are preserved.",
+      "type": "bool",
+      "default": true
+    },
     {
       "key": "walk_shoulder",
       "name": "Double-tap aim for shoulder movement",

@@ -1,0 +1,15 @@
+{
+  "format": 1,
+  "id": "rift-modern",
+  "name": "Rift Modern — Weapon Pictures",
+  "author": "Taurus0815",
+  "version": "0.12.0",
+  "description": "Full-colour weapon pictures rendered from native models for Quick Select, the HUD and vendors. Includes high-resolution cached radial-menu art.",
+  "game": "rac1",
+  "kind": "textures",
+  "serials": [
+    "SCES-50916"
+  ],
+  "source": "pcsx2",
+  "mip_names": "single"
+}

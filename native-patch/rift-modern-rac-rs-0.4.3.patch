@@ -1,12 +1,14 @@
 --- a/rac-rs/src/retail.rs
 +++ b/rac-rs/src/retail.rs
-@@ -294,3 +294,6 @@
+@@ -294,3 +294,8 @@
  	/// `--title`: the boot to the game's own title screen (retail/title_boot.rs); None without the flag.
  	tb: Option<title_boot::Boot>,
  }
 +
 +/// Local Rift Modern presentation bridge.
 +pub mod rift_ui;
++
++pub mod rift_wheel;
 --- a/rac-rs/src/retail/modcam.rs
 +++ b/rac-rs/src/retail/modcam.rs
 @@ -430,6 +430,8 @@
@@ -565,10 +567,39 @@
        ]
      }
    },
-@@ -3934,6 +4233,24 @@
+@@ -3934,6 +4233,53 @@
    },
    "fields": [
      {
++      "name": "omni.rift.hide_original_wheel",
++      "type": "u8",
++      "address": {
++        "pal": "0x000B0042",
++        "ntsc": "0x000B0042"
++      },
++      "about": "Request render-only suppression of the original wheel. Its input and opening clock stay native."
++    },
++    {
++      "name": "omni.rift.wheel_draw_guard",
++      "type": "u8",
++      "readonly": true,
++      "address": {
++        "pal": "0x000B0043",
++        "ntsc": "0x000B0043"
++      },
++      "about": "One when the current level matches a registered render-only wheel guard."
++    },
++    {
++      "name": "omni.rift.hidden_wheel_draws",
++      "type": "u32",
++      "readonly": true,
++      "address": {
++        "pal": "0x000B0044",
++        "ntsc": "0x000B0044"
++      },
++      "about": "Diagnostic count of original wheel drawing calls suppressed by the render-only guard."
++    },
++    {
 +      "name": "omni.rift.menu_style",
 +      "type": "u8",
 +      "address": {
@@ -931,14 +962,120 @@
          if st.ov && matches!(ty, 3..=6) {
              let n = if ty == 6 { 2 } else { 3 };
              let (v, k) = overlay_points(vs, n, st.ofx, st.ofy);
+--- a/rac-rs/src/viewer/hudart.rs
++++ b/rac-rs/src/viewer/hudart.rs
+@@ -2,6 +2,7 @@
+ //! slot table; a missing piece falls back to a plain shape.
+ use super::*;
+ pub(super) mod glyphtex;
++mod rift_assets;
+ 
+ /// Decodes the HUD sprites (bolt icon 0x754f, counter bar 0x7580, nanotech orb 0x7536) and the
+ /// default font; returns the textures in slot order. Missing pieces fall back to plain shapes.
+@@ -160,6 +161,7 @@
+ 	}
+ 	load_fonts(l, disc, &mut tex, &mut a);
+ 	finish_names(l, &mut tex, names);
++	rift_assets::load(&mut tex, &mut a);
+ 	(tex, a)
+ }
+ 
+@@ -192,9 +194,10 @@
+ fn finish_names(l: &Level, tex: &mut [Texture], names: Vec<(usize, crate::texpack::name::TexName)>) {
+ 	// Decoded images no capture took (an earlier level's prefetch, names never drawn) go first: the prefetch below counts this level's only.
+ 	crate::texpack::hudrepl::drop_unused();
+-	if l.title {
+-		crate::texpack::front_hd::apply(tex, &names);
+-	} else {
++	// The same replacements must reach the renderer-owned icon slots used by mods,
++	// not only the separate GS capture. Normalised UVs preserve their layout.
++	crate::texpack::front_hd::apply(tex, &names);
++	if !l.title {
+ 		// the three text font pages (fx records 1..=3) go first: they are the biggest and every text prim samples them
+ 		let fonts = (1..=3).filter_map(|k| crate::texpack::front_hd::fx_name(l, k));
+ 		crate::texpack::hudprefetch::start(fonts.chain(names.into_iter().map(|(_, n)| n)).collect());
+@@ -219,6 +222,7 @@
+ 			Src::Nano => a.orb.first().copied(),
+ 			Src::Item(id) => a.items.get(&id).copied(),
+ 			Src::Hud(id) => a.weapon_icons.get(&id).copied(),
++			Src::Rift => a.rift.get(&d.name).copied(),
+ 		})
+ 		.collect();
+ 	crate::omni::draw_art::set(Art { font: a.font.clone(), icons });
+--- a/rac-rs/src/viewer/app_state.rs
++++ b/rac-rs/src/viewer/app_state.rs
+@@ -76,6 +76,8 @@
+ /// The game's HUD art as overlay slots: (slot, width, height) per frame.
+ #[derive(Default)]
+ pub(super) struct HudArt {
++	/// Optional high-resolution pictures and cached wheel panels from Rift Modern.
++	pub(super) rift: HashMap<String, (usize, f32, f32)>,
+ 	pub(super) bolt: Vec<(usize, f32, f32)>,
+ 	/// The breath meter's sheet 0x753f frames 0..2 (aquarium, low-air aquarium, bubble).
+ 	pub(super) breath: Vec<(usize, f32, f32)>,
+--- a/rac-rs/src/omni/draw_art.rs
++++ b/rac-rs/src/omni/draw_art.rs
+@@ -24,6 +24,8 @@
+ 	Item(u8),
+ 	/// Frame 3 of item sheet 0xea60 + id: the ammo HUD's weapon icon.
+ 	Hud(u8),
++	/// High-resolution Rift Modern art loaded with the level's HUD textures.
++	Rift,
+ }
+ 
+ pub struct IconDef {
+@@ -70,6 +72,13 @@
+ 			}
+ 			None => v.push(IconDef { name: format!("item.{id}"), src: Src::Item(id) }),
+ 		}
++	}
++	for (id, _, _) in ITEMS {
++		v.push(IconDef { name: format!("rift.item.{id}"), src: Src::Rift });
++	}
++	v.push(IconDef { name: "rift.wheel.base".into(), src: Src::Rift });
++	for i in 0..8 {
++		v.push(IconDef { name: format!("rift.wheel.focus.{i}"), src: Src::Rift });
+ 	}
+ 	v
+ }
+--- a/rac-rs/src/retail/worker/machine.rs
++++ b/rac-rs/src/retail/worker/machine.rs
+@@ -74,6 +74,7 @@
+ 	}
+ 	if !disc::extras_off() {
+ 		vendor::register();
++        rift_wheel::register();
+ 	}
+ 	// A loaded savestate's level and draw queues are known now: its first field gets the effects layer too.
+ 	if cold.is_none() {
+--- a/rac-rs/src/retail/gscap/texrepl.rs
++++ b/rac-rs/src/retail/gscap/texrepl.rs
+@@ -290,10 +290,14 @@
+ 
+     /// The cache key of a prim's texture, or None for a prim the rules refuse (see the module doc).
+     fn repl_key(&self, ov: bool, at: u64, tex0: u64, clamp: u64) -> Option<Key> {
+-        if !ov || at & 0x10 == 0 || !self.repl_on() {
++        // Rift's vendor pictures are drawn into the shop panel target before its blit.
++        // Admit only static T8H sprites while the mod's menu skin is requested;
++        // render targets, dirty sources and all ordinary gameplay keep the usual guards.
++        let psm = ((tex0 >> 20) & 0x3f) as u32;
++        let rift_panel = !ov && psm == 0x1b && crate::retail::rift_ui::on();
++        if (!ov && !rift_panel) || at & 0x10 == 0 || !self.repl_on() {
+             return None;
+         }
+-        let psm = ((tex0 >> 20) & 0x3f) as u32;
+         let (tbp, tw, th) = ((tex0 & 0x3fff) as u32, 1u32 << ((tex0 >> 26) & 0xf).min(10), 1u32 << ((tex0 >> 30) & 0xf).min(10));
+         // Region repeat (CLAMP mode 3) needs bit operations on the coordinates; a texture in the main buffer is a render target.
+         let main = self.main_fbp.is_some_and(|f| tbp >= f * 32 && tbp < self.main_end.max(f * 32 + 1));
 --- /dev/null
 +++ b/rac-rs/src/retail/rift_ui.rs
-@@ -0,0 +1,26 @@
+@@ -0,0 +1,27 @@
 +//! Mod-owned presentation switch. No menu state, bindings or saves are modified.
 +use std::sync::atomic::{AtomicBool, Ordering};
 +static ON: AtomicBool = AtomicBool::new(false);
 +pub fn on() -> bool { ON.load(Ordering::Relaxed) }
 +pub fn sync(c: &mut ee_oracle::cpu::Cpu) {
++    super::rift_wheel::sync(c);
 +    ON.store(c.mem.rd32(super::pcext::BASE) == 0x3158_4350 && c.mem.rd8(super::pcext::BASE + 0x41) == 1, Ordering::Relaxed);
 +}
 +/// Colour roles used by the front-end mirror; original colours survive the U toggle.
@@ -1023,4 +1160,108 @@
 +        }
 +        false
 +    }
++}
+--- /dev/null
++++ b/rac-rs/src/retail/rift_wheel.rs
+@@ -0,0 +1,71 @@
++//! Render-only guard for the retail quick-select wheel. The original update,
++//! delay, contextual Triangle handling and selection state remain untouched.
++//! Entries are the two verified shared draw templates (wheel backdrop e934 and
++//! highlight e99c) on all 19 levels of this PAL v1.00 installation. Hash checks
++//! keep the original code on any other layout; scripts can then use a fallback.
++use ee_oracle::{cpu::Cpu,rec::{Hand,register_hand}};
++use std::sync::atomic::{AtomicBool,Ordering};
++const BASE:u32=super::pcext::BASE;
++static INIT:AtomicBool=AtomicBool::new(false);
++static ENABLED:AtomicBool=AtomicBool::new(false);
++static HANDS:&[Hand]=&[
++ Hand{entry:0x237e80,end:0x2386f0,hash:0xb8e544db42612abe,est:0,f:hide}, // level 0
++ Hand{entry:0x238b68,end:0x239190,hash:0x62cbb36bb0852a1b,est:0,f:hide}, // level 0
++ Hand{entry:0x1ee7d8,end:0x1efb50,hash:0xebd49d81893ca6f9,est:0,f:hide}, // level 0
++ Hand{entry:0x24d4a0,end:0x24dd10,hash:0x61d009421f32afe2,est:0,f:hide}, // level 1
++ Hand{entry:0x30e848,end:0x30ea10,hash:0x17cb15858228c501,est:0,f:hide}, // level 1
++ Hand{entry:0x23aac8,end:0x23b338,hash:0x88d04d7b7cfba5c,est:0,f:hide}, // level 2
++ Hand{entry:0x27e848,end:0x27edc4,hash:0xf6848e9e9ba151bd,est:0,f:hide}, // level 2
++ Hand{entry:0x2de8b0,end:0x2de9e0,hash:0x30ee72c3fb6b9b01,est:0,f:hide}, // level 2
++ Hand{entry:0x2275d8,end:0x227e48,hash:0xbed90ae3025314a2,est:0,f:hide}, // level 3
++ Hand{entry:0x21c1d0,end:0x22107c,hash:0x9e8abe36e173b26,est:0,f:hide}, // level 3
++ Hand{entry:0x22b3e0,end:0x22bc50,hash:0x63a534d8433c7302,est:0,f:hide}, // level 4
++ Hand{entry:0x22c0c8,end:0x22c6f0,hash:0x6512ead80a584bcd,est:0,f:hide}, // level 4
++ Hand{entry:0x261200,end:0x261a70,hash:0xe7ab01556e9c2f9c,est:0,f:hide}, // level 5
++ Hand{entry:0x247328,end:0x247b98,hash:0x6c690d6b7cf575e6,est:0,f:hide}, // level 6
++ Hand{entry:0x248010,end:0x248638,hash:0xe6a5380b87ba8ac3,est:0,f:hide}, // level 6
++ Hand{entry:0x260950,end:0x260f78,hash:0x9e172849b740b099,est:0,f:hide}, // level 7
++ Hand{entry:0x25fc68,end:0x2604d8,hash:0x1bf3030de12e3b5e,est:0,f:hide}, // level 7
++ Hand{entry:0x30e810,end:0x30ea1c,hash:0xbb677f0253963c07,est:0,f:hide}, // level 7
++ Hand{entry:0x243078,end:0x2438e8,hash:0x6618b8c6ffa13258,est:0,f:hide}, // level 8
++ Hand{entry:0x2de810,end:0x2dfb54,hash:0xa552c1c0bcbc911d,est:0,f:hide}, // level 8
++ Hand{entry:0x2e94a0,end:0x2e9cc0,hash:0xb763428a9518cdcd,est:0,f:hide}, // level 8
++ Hand{entry:0x257ae0,end:0x258350,hash:0xfbadefc35e76551e,est:0,f:hide}, // level 9
++ Hand{entry:0x2587c8,end:0x258df0,hash:0x91ad2e3fa52d423b,est:0,f:hide}, // level 9
++ Hand{entry:0x2371b0,end:0x240b4c,hash:0x4876fc7c4904ad23,est:0,f:hide}, // level 9
++ Hand{entry:0x22b468,end:0x22bcd8,hash:0xccd295382d05e432,est:0,f:hide}, // level 10
++ Hand{entry:0x22c150,end:0x22c778,hash:0xf9eafb25de6f1c5,est:0,f:hide}, // level 10
++ Hand{entry:0x25e838,end:0x25f0a8,hash:0x63eaf406b398a04e,est:0,f:hide}, // level 11
++ Hand{entry:0x251678,end:0x251ee8,hash:0xf53fa7432fb5fa8c,est:0,f:hide}, // level 12
++ Hand{entry:0x2438e8,end:0x244158,hash:0xf9062783192c194e,est:0,f:hide}, // level 13
++ Hand{entry:0x2445d0,end:0x244bf8,hash:0xa4380ef24f254f59,est:0,f:hide}, // level 13
++ Hand{entry:0x22da40,end:0x232c80,hash:0x3079553e2c0ce725,est:0,f:hide}, // level 13
++ Hand{entry:0x2408f0,end:0x241160,hash:0x158a2ff5e32cc26c,est:0,f:hide}, // level 14
++ Hand{entry:0x228a00,end:0x229270,hash:0xed2093001f08667c,est:0,f:hide}, // level 15
++ Hand{entry:0x233890,end:0x234100,hash:0x52136c66382c0ae0,est:0,f:hide}, // level 16
++ Hand{entry:0x2330e8,end:0x233958,hash:0xb5a25bc4431a0a62,est:0,f:hide}, // level 17
++ Hand{entry:0x233dd0,end:0x2343f8,hash:0xad1ea0a90754dc45,est:0,f:hide}, // level 17
++ Hand{entry:0x23b3e8,end:0x23bc58,hash:0xefb8f19eec5856ae,est:0,f:hide}, // level 18
++ ];
++static RANGES:[(usize,usize);19]=[(0,3),(3,5),(5,8),(8,10),(10,12),(12,13),(13,15),(15,18),(18,21),(21,24),(24,26),(26,27),(27,28),(28,31),(31,32),(32,33),(33,34),(34,36),(36,37)];
++
++pub fn register() {
++ if std::env::var("ORACLE_HAND").is_ok_and(|v|v=="0") {return;}
++ register_hand(HANDS);ENABLED.store(true,Ordering::Relaxed);
++}
++pub fn sync(c:&mut Cpu) {
++ if c.mem.rd32(BASE)!=0x3158_4350 {return;}
++ if !INIT.swap(true,Ordering::Relaxed) {c.mem.wr32(BASE+0x44,0);}
++ let level=c.mem.rd32(super::disc::va(0x15ed84)) as usize;
++ let ok=ENABLED.load(Ordering::Relaxed) && RANGES.get(level).is_some_and(|&(a,z)|HANDS[a..z].iter().all(|h|ee_oracle::rec::hash(&c.mem,h.entry,h.end)==h.hash));
++ c.mem.wr8(BASE+0x43,ok as u8);
++}
++fn hide(c:&mut Cpu)->bool {
++ if c.mem.rd32(BASE)!=0x3158_4350 || c.mem.rd8(BASE+0x42)!=1 || c.mem.rd8(0x1413f4)!=0 || c.mem.rd32(super::disc::va(0x15f5a4))!=0 {return false;}
++ let elem=c.g(4) as u32 & 0x1ff_ffff;
++ if !(0x10_0000..0x1ff_ff80).contains(&elem) {return false;}
++ let n=c.mem.rd32(BASE+0x44);c.mem.wr32(BASE+0x44,n.wrapping_add(1));
++ if n==0 {eprintln!("rift wheel: original quick-select drawing hidden; native input and timing retained");}
++ let result=c.mem.rd32(elem+0x58);c.s(2,u64::from(result));
++ true
++}
+--- /dev/null
++++ b/rac-rs/src/viewer/hudart/rift_assets.rs
+@@ -0,0 +1,27 @@
++//! Optional Rift Modern pictures, uploaded with the level's ordinary HUD textures.
++//! No per-frame file access and no changes to the game's models or inventory.
++use super::*;
++
++pub(super) fn load(tex: &mut Vec<Texture>, art: &mut HudArt) {
++	let Some(root) = crate::texpack::mods::mods_root() else { return };
++	let active = std::fs::read_to_string(root.join("active.txt")).unwrap_or_default();
++	if !active.lines().any(|l| l.split('#').next().unwrap_or("").trim() == "rift-modern") { return; }
++	let folder = root.join("rift-modern").join("images");
++	for d in crate::omni::draw_art::defs().iter().filter(|d| matches!(d.src, crate::omni::draw_art::Src::Rift)) {
++		let file = if let Some(id) = d.name.strip_prefix("rift.item.") { format!("item-{id}.png") }
++		else if d.name == "rift.wheel.base" { "wheel-base.png".into() }
++		else if let Some(i) = d.name.strip_prefix("rift.wheel.focus.") { format!("wheel-focus-{i}.png") }
++		else { continue };
++		let Ok(bytes) = std::fs::read(folder.join(&file)) else { continue };
++		if bytes.len() > 8 * 1024 * 1024 { continue; }
++		let image = match crate::texpack::png::load(&bytes) {
++			Ok(i) if i.w <= 2048 && i.h <= 2048 => i,
++			Ok(_) => continue,
++			Err(e) => { eprintln!("rift art: {file}: {e}"); continue; }
++		};
++		let rgba = image.levels[0].chunks_exact(4).map(|p| [p[0],p[1],p[2],p[3]]).collect();
++		art.rift.insert(d.name.clone(), (1 + tex.len(), image.w as f32, image.h as f32));
++		tex.push(Texture { w: image.w as usize, h: image.h as usize, rgba });
++	}
++	eprintln!("rift art: {} high-resolution pictures and wheel panels loaded", art.rift.len());
 +}

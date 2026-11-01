@@ -1,58 +1,55 @@
-# Rift Modern 0.11.0
+# Rift Modern 0.12.0
 
-Angepasst an RAC-RS 0.4.2/0.4.3, OmniLoader 0.1.0 (Host-ABI 1.6, Script-API 1.3), PAL SCES-50916. Autor: Taurus0815.
+**Ersteller / Author: Taurus0815**
 
-- Cyan-/Violett-HUD fuer originale Nanotech-Punkte, Bolts und Munition. Funktioniert eigenstaendig; externe Nanotech-HUDs koennen optional die Gesundheitsanzeige uebernehmen.
-- Schnellere Beschleunigung und Bremsen auf dem Boden (Standard 1,6). Keine Positionsspruenge, keine Aenderung von Kollisionen, Sprungtiming und Hoechstgeschwindigkeit.
-- Normale Schraubschluessel-Schlaege und Schlag von oben (Sprung + Nahkampf) mit Animationsfaktor 1,6. Native Sprung-/Fallphysik und Schaden pro Treffer bleiben erhalten. Die beiden Tempos lassen sich getrennt einstellen.
-- Kompaktes modernes Auswahlrad an Originalposition links (Mitte 128/208, Radius 92 im 512x448-HUD-Raum), ohne grosses Mittelfeld. Die acht Richtungen und die belegten Spiel-Slots bleiben erhalten. Schnellauswahl mit echter Pause: Dreieck/Y halten, mit linkem Stick oder Steuerkreuz auswaehlen, loslassen zum Ausruesten und Fortsetzen. Kreis/B bricht ab. Welt, Gegner und Projektile werden durch die native Spielpause angehalten. Die belegten Slots stammen aus der Schnellauswahl des Spiels. In besonderen Bewegungs-/Fahrzeugzustaenden bleibt die Originalfunktion zustaendig. Pause during Quick Select = Off stellt das Originalrad wieder her.
-- Modernes Pausemenue mit der Auswahl und Navigation des Spiels. Die Unterseiten behalten ihre Spielinhalte und bekommen einen passenden Rahmen. U zeigt beim Pausieren die Originalansicht.
-- Controller: L2/LT zielt, R2/RT benutzt die Waffe, Quadrat/X ist Nahkampf, Kreuz/A springt, Dreieck/Y oeffnet die Schnellauswahl. Kreis/B geht in Menues zurueck. R1/RB behaelt die originalen Duck-/Sprungaktionen. Phantom Dash, Hoverboots und Rift-Tether sind keine Funktionen von Ratchet 1.
-- Startlogos werden mit der vorhandenen Option `intro=skip` uebersprungen. Options/Start kann weiterhin Zwischensequenzen ueberspringen (`skipcut=on`).
+## Deutsch
 
-Die installierte native Controller-Zuordnung lautet `pad=circle:rt,l2:b,r2:lt`. Das ist eine einmalige Einstellung in player/pc_options.txt und im aktiven Launcher-Profil. Die Mod schreibt sie nicht bei jedem Start zurueck. Sie bleibt unter Pause > Optionen > Steuerung aenderbar. Nach einer Aenderung von "L2" weg von Kreis/B bitte die Mod-Option "Rift controller menu Back" deaktivieren.
+Rift-Apart-inspiriertes HUD, Menüdesign und reaktionsschnellere Steuerung für RAC-RS 0.4.3. Benötigt OmniLoader 0.1.0, Host-ABI 1.6 und Script-API 1.3. Geprüft auf PAL SCES-50916 v1.00.
 
-J schaltet die Bewegungsreaktion um, K das HUD. Beide Tasten sowie U fuer die Original-Menueansicht sind in den Mod-Optionen frei belegbar. Health source steht standardmaessig auf Original game health. Der externe Modus ist nur fuer eine separat vorhandene, kompatible Nanotech-HUD-Integration gedacht; eine solche Drittanbieter-Mod wird nicht mitgeliefert.
+- Originale Kollision, Bodenphysik und Waffenabläufe bleiben erhalten.
+- Zweimal kurz Zielen antippen: Schulteransicht mit seitlicher/rückwärtiger Bewegung ein-/ausschalten. Normales Halten bleibt temporäres Zielen.
+- Zielen halten + Viereck/X: nativer Schraubschlüsselwurf (Comet Strike, mit den ursprünglichen Aktionsbedingungen). Viereck allein bleibt normaler Nahkampf; Sprung-/Aufschlagaktionen laufen weiter nativ.
+- Kompaktes pausiertes Auswahlrad mit farbigen Bildern aus den Waffen-/Gadget-Modellen. Ein hochauflösender Ring ersetzt die vielen kleinen Zeichenstreifen.
+- Das originale Rad wird bei eingeschaltetem Pause-Rad ausgeblendet. Die originale Haltezeit und die erste Dreieck-Eingabe bleiben für Händler und andere Interaktionen erhalten.
+- Waffenbilder auch im HUD und beim Händler. Geschwindigkeit, Aufschlag-Radien und Bolt-Anziehung sind in den Mod-Optionen regelbar.
 
-Die Umsehgeschwindigkeit steht auf 80 fuer Controller und Maus (vorher Standard 50). HUD/Menues stehen ausdruecklich auf Sharp. Vollbild uebernimmt die Desktop-Aufloesung des aktuellen Monitors. HUD position=Corners verteilt die Anzeigen ueber dessen volle Breite. RAC-RS schaltet die hohe Menueaufloesung ab etwa 900 Pixel Bildhoehe ein. Alle diese Werte bleiben ueber Launcher und Spieloptionen aenderbar.
+### Installation
 
-Strafe-Aiming-Stil und Controller-Zuordnung stammen weiterhin aus den Launcher-/Spieloptionen. Kein Dreh-, Kamera-, Kollisions- oder Tastatur-Uebernahme-Hook wird installiert. Die Schulteransicht beim normalen Laufen wird seit 0.9.0 separat angefordert und benutzt die native Kamera samt Wandpruefung. Der Mod-Status muss fuer beide Mods `loaded` und `replaces: []` zeigen.
+Den vollständigen Ordner `rift-modern` mit `main.luau`, `omni-mod.json`, `mod.json`, `images` und `textures` nach `mods` kopieren. Vorher vorhandene Dateien sichern und die Mod im Launcher aktivieren.
 
+Für Schulterbewegung, gemeinsamen nativen Menü-Skin, hochauflösende Bilder im eigenen Rad und die reine Zeichenunterdrückung des alten Rads zusätzlich den [nativen Quellpatch für RAC-RS 0.4.3](../../native-patch/README.md) anwenden und den Player neu bauen. Die Bilder sind Teil dieser Mod; die ZIP installiert keinen neuen Player. Mit HQ Texture Remake zusammen muss Rift Modern in der Aktivliste davor stehen.
 
-Vor jedem Installationsstand wurde unter mod_backups gesichert. Die Tests laufen mit getrennten Spielstands- und Mod-Kopien. Beim Zuruecksetzen von Darstellung/Einstellungen keine Spielstaende zurueckkopieren.
+J schaltet die Bewegungsreaktion um, K das HUD und U die Original-Menüansicht. Diese Tasten sind frei belegbar. Die neue Wurfkombination folgt den eingestellten Ziel- und Nahkampf-Aktionen; sie schreibt keine Launcher-Belegung um. Die Option `Aim + melee: wrench throw` kann separat ausgeschaltet werden.
 
-## Ergaenzungen 0.11.0
+Die Gesundheitsanzeige verwendet standardmäßig die originale Spielgesundheit. Ein optionaler externer Modus ist für eine separat vorhandene, kompatible Nanotech-HUD-Integration gedacht. Arsenal Mastery wird nicht mitgeliefert. Bereits gespeicherte persönliche Werte bleiben erhalten.
 
-Die lokale Kameraerweiterung wurde nach dem Spielupdate auf die aktuellen 0.4.3-Quellen uebertragen. Der normale Spielstart bleibt auf 0.4.3; die alte Star-Wars-Spielversion wird dadurch nicht ersetzt. Launcher-Optionen und Controller-Zuordnung bleiben erhalten.
+## English
 
-- Ein neuer Dreieck-Druck erreicht immer zuerst das Originalspiel. Haendler, Schiff und andere Interaktionen behalten Vorrang. Das pausierte Auswahlrad uebernimmt erst, wenn das originale Rad seinen vollstaendigen Oeffnungswert 8 erreicht hat (PAL: acht Schritte, etwa 0,16 s). Kurze Druecke werden nicht in eine Pause umgewandelt. Der native Ausblendwert wird bei der Uebernahme beendet, damit beim Fortsetzen kein alter Waffenwunsch nachkommt.
-- Zweimal kurz Zielen antippen schaltet die Schulteransicht beim normalen Laufen ein; erneut zweimal schaltet sie aus. Pro Tipp maximal 0,25 s, maximal 0,35 s Pause zwischen den Tipps. Ein normales laengeres Zielen schaltet den Laufmodus nicht um. Der Mod-Schalter heisst jetzt `Double-tap aim for shoulder camera`; bei Spielstart ist der Laufmodus aus. Maus und Controller verwenden denselben nativen Zielzustand; keine Eingaben oder Launcher-Zuordnungen werden umgeschrieben.
+Rift Apart-inspired HUD, menu styling and more responsive controls for RAC-RS 0.4.3. Requires OmniLoader 0.1.0, host ABI 1.6 and script API 1.3. Checked on PAL SCES-50916 v1.00.
 
-## Ergaenzungen 0.9.0
+- Native collision, ground physics and weapon routines are retained.
+- Double-tap aim to toggle shoulder framing with sideways/backward movement. Holding aim normally remains temporary aiming.
+- Hold aim + press Square/X for the native Comet Strike wrench throw, subject to the original action conditions. Melee alone remains normal melee; jumping and ground impacts keep their native paths.
+- Compact paused quick-select wheel with full-colour pictures rendered from the weapon/gadget models. A high-resolution ring replaces the many small drawing strips.
+- The original wheel is hidden when the paused wheel is enabled. The original hold delay and initial Triangle input remain available for vendors and other interactions.
+- Weapon pictures also appear in the HUD and at vendors. Animation speeds, impact radii and bolt attraction are adjustable in the mod settings.
 
-- Der Schlag von oben behaelt beim Fallen seine Schlagpose, statt die Animation bei hohem Tempo schon in der Luft zu beenden. Ausholen und Ausklang laufen mit dem eingestellten Faktor; die Animation wartet waehrend des Fallens auf den Bodenkontakt. Gravitation und Kollision laufen im Original weiter.
-- Seit 0.9.0 verwendet die Schulteransicht die vorhandene native Seiten-/Wand-/Deckenpruefung und veraendert weder die Zieltaste noch Schussrichtung, Koerperdrehung oder Controller-Belegung. Beim tatsaechlichen Zielen gilt weiterhin der gewaehlte Launcher-Stil. Seit 0.11.0 wird die Laufansicht per doppeltem Antippen der Zieltaste geschaltet.
-- Die Kamera benoetigt die zugehoerige lokale Spielversion. Native Erweiterung: das benannte Byte `omni.rift.shoulder_walk` in der unbenutzten alten PC-Kameratabelle (0xB0040). Frischer RAM bedeutet Orbit, die aktive Mod fordert die Schulteransicht an. Ohne das neue Feld wird nur die Kameraerweiterung ausgelassen und ein Hinweis protokolliert.
+### Installation
 
-## Ergaenzungen 0.8.0
+Copy the complete `rift-modern` folder, including `main.luau`, `omni-mod.json`, `mod.json`, `images` and `textures`, into `mods`. Back up existing files and enable the mod in the launcher.
 
-- Die Zusatzwelle wartet jetzt auf den tatsaechlichen Bodenaufprall. Ein kurzer nativer Bodentest bestaetigt den Kontakt der Fuesse mit einer begehbaren Flaeche. Das fruehe Erstellen einer Trefferbeschreibung beim Ausholen und das Ende der Animation in der Luft loesen keine Welle aus; bei hohem Tempo wird noch das anschliessende Fallen abgewartet. Ein normaler Sprung erzeugt keine Zusatzwelle; Schaden-/Schwimm-/andere Unterbrechungszustaende verwerfen sie.
-- Kistenradius bleibt 6 Spieleinheiten. Gegner in unmittelbarer Naehe (Standard 2,5) erhalten beim selben Aufprall einen nativen Schraubschluessel-Treffer; separat vorhandene Schaden-/XP-Mods koennen den nativen Treffer weiterverarbeiten. `slam_enemy_radius=0` deaktiviert diesen Zusatzschaden. Pro Schlag erfolgt nur eine Zusatzwelle.
-- Einstellbereiche: Beschleunigen/Bremsen jetzt 1,0 bis 8,8; normale Schlaege und Schlag von oben jeweils 1,0 bis 4,0. Manifest und Laufzeitbegrenzungen stimmen ueberein. Gewaehlte Werte werden dadurch nicht automatisch erhoeht; das installierte Profil behaelt Bewegungsreaktion 4,4 und die beiden zuletzt gewaehlten Schlagtempos.
+Shoulder locomotion, the shared native menu skin, high-resolution pictures in the custom wheel and render-only suppression of the original wheel additionally require the [RAC-RS 0.4.3 native source patch](../../native-patch/README.md) and a rebuilt player. The pictures are included in this mod; the ZIP does not install a new player. When used with HQ Texture Remake, place Rift Modern above it in the active list.
 
-## Ergaenzung 0.7.1
+J toggles movement response, K toggles the HUD and U toggles the original menu view. These keys are configurable. The wrench combo follows the configured aim and melee actions and does not overwrite launcher bindings. `Aim + melee: wrench throw` can be disabled separately.
 
-Das installierte Profil nutzt `movement_response=4.4` statt zuvor 2.2: doppelte Beschleunigungs- und Bremsrate beim normalen Laufen, ungefaehr halbierte Reaktionszeit. In 0.7.1 wurde die Obergrenze auf 4.4 angehoben (0.8.0: 8.8). Hoechstgeschwindigkeit, Sprung-/Fallphysik, Kollision und Launcher-Steuerung bleiben unveraendert. Die allgemeinen Presets behalten ihre bisherigen Werte.
+Health rendering defaults to the original game's health. An optional external mode is intended for a separately installed compatible Nanotech HUD integration. Arsenal Mastery is not bundled. Existing personal settings are preserved.
 
-## Ergaenzungen 0.7.0
+## Downloads und Bilder / Downloads and pictures
 
-- `wrench_speed=1.6`: normale Schlaege; `slam_speed=1.6`: Schlag von oben. Beide 1,0 bis 2,0.
-- `slam_crate_radius=6`: einmal pro Schlag von oben eine zusaetzliche Kistenwelle mit 6 m Radius, ueber den originalen Trefferpfad. Gegner bekommen keinen zusaetzlichen Flaechenschaden. 0 deaktiviert die Zusatzwelle. Im Test wurde die Kiste bei 4,5 m zerstoert, die bei 8 m blieb intakt.
-- `bolt_radius=2`: verdoppelt die originalen Anziehungswerte nach dem abschliessenden HeroItemsAttach. Bei normalem Ratchet sind es 6 statt 3 m und 3,5 statt 1,75 m Hoehenabstand. Native Anziehung, Wert der Bolts und Sammelgeraeusch bleiben erhalten.
-- Schnellauswahl: feinere Ringkanten (1 statt 2 HUD-Zeilen), farbige HUD-Waffenbilder statt der violetten Inventar-Silhouetten, weniger vergroesserte Symbole. Die beste Darstellung braucht HUD=Sharp und mindestens 896 Pixel Fensterhoehe. Die urspruenglichen Spielgrafiken haben weiterhin eine begrenzte Aufloesung.
-- HUD position=Corners verteilt Waffen-/XP-Anzeige und Bolts ueber die gesamte Bildschirmbreite; Nanotech bleibt oben mittig. Vollbild ist randlos auf dem aktuellen Monitor und uebernimmt dessen Desktop-Aufloesung (hier 3440 x 1440). Diese ausdruecklich gewuenschten Optionen wurden in player/pc_options.txt und profiles/default/pc_options.txt gesetzt; Strafe Aiming und Controller-Zuordnung bleiben erhalten.
+[ZIP-Pakete und Vorschauen / ZIP packages and previews](https://github.com/Taurus0815/RAC-RS-Mods)
 
+## Lizenz / License
 
-Version 0.11.0: Die per zweifachem kurzen Tippen auf Zielen ein-/ausschaltbare Schulteransicht nutzt nun auch die native Strafe-Bewegung: Ratchet schaut zur Kamera-Blickrichtung und laeuft seitlich/rueckwaerts wie beim Zielen. Kein dauerhaftes kuenstliches Zielen; Waffen und Zielhilfe folgen weiterhin dem echten Zielknopf. Ohne Schultermodus gilt das normale Laufen. Die Launcher-Option Strafe aiming bleibt massgeblich.
+Die Script-Dateien stehen unter der beiliegenden MIT-Lizenz. Waffenbilder sind aus der lokalen Disc gerenderte Spielgrafiken; die MIT-Lizenz der Scripts gilt nicht für diese Grafiken. Verarbeitung und Prüfsummen: `picture-receipt.json`.
 
-Das Menue-Design umfasst jetzt auch Start/Laden, Optionen, alle Pause-Unterseiten, Haendler und Bestaetigungen. Die gemeinsamen nativen Menue-Rahmen und Schriftfarben erhalten dunkle Flaechen, Cyan-Markierungen und violette Akzente. Texte, Symbole, 3D-Vorschauen, Auswahl, Tastenzuordnung und Speicherfunktionen laufen weiter nativ. U (oder die frei belegte Menue-Taste) stellt die Originalansicht wieder her. Die installierte Rift-EXE ist fuer den gemeinsamen nativen Menue-Skin und die Schulterbewegung erforderlich.
+Scripts use the included MIT license. Weapon pictures are game graphics rendered from the local disc; the script license does not apply to those graphics. Processing details and checksums: `picture-receipt.json`.

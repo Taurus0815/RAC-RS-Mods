@@ -1,6 +1,8 @@
 --!nonstrict
 local M = {}
 local health = require("health_style")
+local picture_names={}
+for _,name in ipairs(omni.draw.icons()) do picture_names[name]=true end
 -- Field names and icon names are separate (decoy is decoy_glove in the icon table).
 local items = {
     [8] = { "omniwrench", "OMNIWRENCH", "gadget.omniwrench" },
@@ -57,7 +59,8 @@ function M.setup(state)
                 -- Preserve the stock XP bar immediately below the ammo box.
                 d.rect(10, 8, 150, 34, 0x0A1422FF)
                 d.rect(10, 8, 2, 34, 0x4CE7FFFF)
-                d.icon(17, 12, 26, 26, item[3], { tint = 0xFFFFFFFF })
+                local picture="rift.item."..id
+                d.icon(17, 12, 26, 26, picture_names[picture] and picture or item[3], { tint = 0xFFFFFFFF })
                 d.text(48, 11, item[2], { size = 0.43, color = 0x90B6CEFF })
                 local count = "READY"
                 if ammo_items[id] then

@@ -21,3 +21,17 @@ Referenzinstallation: RAC-RS 0.4.3, PAL SCES-50916 v1.00, OmniLoader 0.1.0, Host
 Die Zuordnung der Texturen ist fuer alle 19 Planeten statisch geprueft; die Laufzeit- und Bildpruefungen betreffen ausgewaehlte Szenen und Menues. Das ist kein vollstaendiger Spieldurchlauf und keine manuelle Kollisionserprobung jedes Levels. Bewegungsphysik, Kollision, Waffeneingaben und Menuefunktionen verwenden weiterhin die vorhandenen nativen Spielpfade.
 
 Die im Texture-Pack-Log als fehlend bezeichneten HUD-/Menue-Texturen sind erwartete Nicht-Treffer: HQ Texture Remake ersetzt ausschliesslich die vorgesehenen Charakter-/Waffen-/Gadget-Texturen. Script-Mods besitzen `omni-mod.json`, kein Texture-Pack-`mod.json`; entsprechende Hinweise des separaten Texture-Pack-Scanners sind keine Script-Ladefehler.
+
+## Rift Modern 0.12.0 — 01.11.2026
+
+- Zielen + Viereck ergänzt nur beim echten gehaltenen Aim die native R1-Belegung. Nativer Comet-Strike-Auswurf im Instrumentierungslauf bei Feld 2755 nachgewiesen. Viereck ohne Aim und Viereck bei lediglich eingerasteter Schulteransicht bleiben Nahkampf. In der Luft gelten die originalen Bedingungen des Hyper Strike. Keine direkte Zustands- oder Positionsmanipulation für den Wurf.
+- 19 farbige Waffen-/Gadget-Bilder aus den nativen Modellen gerendert (512 × 512), 136 HUD-/Händler-Texturzuordnungen über alle 19 Planeten geprüft. Das Auswahlrad verwendet 1024 × 1024 große, geglättete Ringflächen. Keine neue Ring-Geometrie pro Bild.
+- Die neue native Sperre unterdrückt ausschließlich die beiden Zeichenpfade des originalen Auswahlrads. Alle 37 adressierten Routinen der 19 PAL-Planeten sind durch Hash-Abgleich geschützt. Originale Eingaben, Spiel-Update und Händlerabfrage laufen weiter. Der Lauf zeichnet die unveränderte Fade-Folge 1 bis 8 vor dem eigenen Pausenrad auf; die Sperre ist aktiv. Die Originalansicht lässt sich weiterhin wählen.
+- Isolierter Integrationstest mit Kopie eines Testspielstands: Händler geöffnet, Waffenwechsel durch Loslassen bestätigt, Abbruch behält die vorherige Waffe. Zusätzlich Auswahlrad während eines Sprungs geöffnet: Höhe 60.8275 bleibt während der Pause konstant, danach läuft der Sprung weiter. Kein Rückfall zum alten Rad im geprüften Ablauf.
+- Vorschaubilder stammen aus echten Spielaufnahmen. Es wurden keine Käufe im persönlichen Spielstand durchgeführt.
+
+### English
+
+Aim + Square was verified through the original wrench-release hook. Square without actual held aim, including toggled shoulder walking, remains melee. The native airborne action conditions are preserved. The integration run checked vendor access, the original eight-tick opening timing, weapon commit, cancellation and mid-air world pause. The original wheel is suppressed only at rendering; all supported routines require matching original-code hashes. Nineteen model renders and 136 HUD/vendor texture aliases were checked against all nineteen planets. Native weapon physics and collision are retained.
+
+- Installierter Player: Rift Modern 0.12.0 und die separat vorhandene lokale Integration laden laut `mods/status.json`. `player/log.txt` enthält keinen Mod-Ladefehler. Persönliche Optionen, Launcher-Profil, Mod-Einstellungen und `card.bin` bleiben nach dem Lade-Test bytegleich. Händlerbilder visuell bestätigt; 754 Ersetzungen im geprüften Shop-Lauf, keine abgelehnten Bilder. Die Händler-Panels verwenden weiterhin die originalen Render-Targets, das eigene Auswahlrad zeichnet seine Bilder direkt hochauflösend.
