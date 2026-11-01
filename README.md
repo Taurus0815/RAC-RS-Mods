@@ -13,10 +13,11 @@ Direkte ZIP-Downloads / Direct ZIP downloads:
 | Paket / Package | Version | Download |
 | --- | --- | --- |
 | Rift Modern | 0.12.0 | [rift-modern-0.12.0.zip](https://github.com/Taurus0815/RAC-RS-Mods/raw/refs/heads/main/downloads/rift-modern-0.12.0.zip) |
-| HQ Texture Remake | 1.0.0 | [hq-texture-remake-1.0.0.zip](https://github.com/Taurus0815/RAC-RS-Mods/raw/refs/heads/main/downloads/hq-texture-remake-1.0.0.zip) |
+| HQ Texture Remake — **beide Teile / both parts** | 2.0.0 | [Teil 1 / Part 1](https://github.com/Taurus0815/RAC-RS-Mods/releases/download/hq-texture-remake-v2.0.0/hq-texture-remake-2.0.0-part01.zip) · [Teil 2 / Part 2](https://github.com/Taurus0815/RAC-RS-Mods/releases/download/hq-texture-remake-v2.0.0/hq-texture-remake-2.0.0-part02.zip) |
+| HQ Texture Remake Lite — Figuren/Waffen / characters/weapons | 1.0.0 | [hq-texture-remake-1.0.0.zip](https://github.com/Taurus0815/RAC-RS-Mods/raw/refs/heads/main/downloads/hq-texture-remake-1.0.0.zip) |
 | Rift Modern: nativer Quellpatch / native source patch | RAC-RS 0.4.3 | [rift-modern-native-patch-0.4.3.zip](https://github.com/Taurus0815/RAC-RS-Mods/raw/refs/heads/main/downloads/rift-modern-native-patch-0.4.3.zip) |
 
-[SHA-256-Prüfsummen / SHA-256 checksums](downloads/SHA256SUMS.txt)
+[Prüfsummen der Mod-Pakete / mod package checksums](downloads/SHA256SUMS.txt) · [HQ 2.0.0 SHA-256](downloads/SHA256SUMS-HQ-2.0.0.txt)
 
 ## Deutsch
 
@@ -39,9 +40,11 @@ Wenn beide Mods aktiv sind, **Rift Modern vor HQ Texture Remake** einordnen, dam
 
 ### HQ Texture Remake
 
-Originalgetreue lokale 4×-Hochskalierung der Texturen von **Ratchet, Clank und den gehaltenen Waffen/Gadgets einschließlich Schraubschlüssel**. Version 1.0.0 enthält 30 unterschiedliche Grundtexturen und 70 Ersetzungsdateien einschließlich passender Mip-Zuordnungen. Beispielsweise werden 256 × 256 zu 1024 × 1024 Pixeln. Texturanordnung, Seitenverhältnisse und Transparenz bleiben erhalten. Die Zuordnung wurde gegen alle 19 Planetendatensätze geprüft.
+Originalgetreue lokale **4×-Hochskalierung**: **4.415 unterschiedliche Grundtexturen, 26.818 PNG-Ersetzungen**. Version 2.0.0 erweitert das Pack auf Landschaften, Gebäude, Gegner, Gegenstände und Vegetation aller 19 Planeten sowie benannte Himmel-, Effekt-, Partikel-, HUD-, Titel-, Schiffs- und Warp-Texturen. Ratchet, Clank und die Waffen bleiben enthalten. UV-Anordnung, Seitenverhältnisse und originale Transparenz bleiben erhalten; die größte Ausgabe misst 2048 × 1024 Pixel.
 
-**Installation:** ZIP entpacken, `hq-texture-remake` nach `mods` kopieren und im Launcher aktivieren. Das Pack wird beim nächsten Spielstart oder Planetenladen übernommen. Dieses Texture Pack benötigt keinen eigenen Player-Build. Erstellt mit lokal ausgeführtem [Real-ESRGAN x4plus](https://github.com/xinntao/Real-ESRGAN).
+**Installation:** **Beide ZIP-Teile von Version 2.0.0** herunterladen und in denselben `mods`-Ordner entpacken. Den enthaltenen Ordner `hq-texture-remake` zusammenführen, im Launcher aktivieren und das Spiel neu starten. Version 2.0.0 ersetzt 1.0.0. Die kleinere 1.0.0 bleibt als Alternative für Figuren und Waffen verfügbar. Rift Modern vor HQ Texture Remake einordnen. [Paket-Anleitung](mods/hq-texture-remake/README.md).
+
+Die Dateizuordnungen wurden gegen alle 19 Planetendatensätze geprüft; zusätzlich wurden frühe und späte Planeten im Player geladen und visuell kontrolliert. Laufend erzeugte Render-Targets, Videos und vom Player ausdrücklich ausgenommene Effekt-Slots bleiben nativ. Ein vollständiger Spieldurchlauf ist kein Teil dieser Prüfung. Das Pack benötigt keinen eigenen Player-Build. Erstellt mit lokal ausgeführtem [Real-ESRGAN x4plus](https://github.com/xinntao/Real-ESRGAN).
 
 ### Prüfung und Umfang
 
@@ -70,9 +73,11 @@ When both mods are enabled, place **Rift Modern above HQ Texture Remake** so wea
 
 ### HQ Texture Remake
 
-A faithful local 4× upscale of **Ratchet, Clank and held weapons/gadgets, including the Omniwrench**. Version 1.0.0 contains 30 unique base textures and 70 replacement files, including matching mip names. For example, 256 × 256 becomes 1024 × 1024 pixels. Texture layout, aspect ratio and transparency are preserved. Texture mapping was checked against all 19 planet datasets.
+A faithful local **4× upscale**: **4,415 unique base textures and 26,818 PNG replacements**. Version 2.0.0 expands coverage to terrain, buildings, enemies, objects and vegetation across all 19 planets, plus named sky, effects, particles, HUD, title, ship and warp textures. Ratchet, Clank and weapons remain included. UV layout, aspect ratios and original transparency are preserved; the largest output is 2048 × 1024 pixels.
 
-**Installation:** Extract the ZIP, copy `hq-texture-remake` into `mods` and enable it in the launcher. It takes effect on the next game start or planet load. This texture pack does not require a custom player build. Created with locally executed [Real-ESRGAN x4plus](https://github.com/xinntao/Real-ESRGAN).
+**Installation:** Download **both version 2.0.0 ZIP parts** and extract them into the same `mods` directory, merging `hq-texture-remake`. Enable it in the launcher and restart the game. Version 2.0.0 replaces 1.0.0. The smaller 1.0.0 remains available as a characters-and-weapons alternative. Place Rift Modern above HQ Texture Remake. [Package instructions](mods/hq-texture-remake/README.md).
+
+File mappings were checked against all 19 planet datasets, with early and late planets also loaded and visually inspected in the player. Runtime render targets, videos and explicitly excluded effect slots remain native. These checks are not a full playthrough. The pack does not require a custom player build. Created with locally executed [Real-ESRGAN x4plus](https://github.com/xinntao/Real-ESRGAN).
 
 ### Verification and scope
 
@@ -107,3 +112,13 @@ Dieselbe Textur vor und nach der 4×-Hochskalierung, gleich groß dargestellt. /
 | Original — 256 × 256 | HQ Texture Remake — 1024 × 1024 |
 | --- | --- |
 | <img src="previews/hq-ratchet-original.png" alt="Originaltextur / original texture" width="420"> | <img src="previews/hq-ratchet-4x.png" alt="4×-Textur / 4× texture" width="420"> |
+
+### HQ Texture Remake 2.0.0 — Welt / World
+
+Novalis:
+
+![HQ Texture Remake 2.0.0 — Novalis](previews/hq-world-novalis.png)
+
+Gemlik-Basis / Gemlik Base:
+
+![HQ Texture Remake 2.0.0 — Gemlik](previews/hq-world-gemlik.png)

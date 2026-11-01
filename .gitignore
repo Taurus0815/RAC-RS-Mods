@@ -8,3 +8,6 @@ toolchain/
 mods/active.txt
 mods/settings.json
 mods/status.json
+
+# Full HQ PNG assets are distributed as release ZIPs.
+/mods/hq-texture-remake/textures/*.png

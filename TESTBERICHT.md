@@ -35,3 +35,29 @@ Die im Texture-Pack-Log als fehlend bezeichneten HUD-/Menue-Texturen sind erwart
 Aim + Square was verified through the original wrench-release hook. Square without actual held aim, including toggled shoulder walking, remains melee. The native airborne action conditions are preserved. The integration run checked vendor access, the original eight-tick opening timing, weapon commit, cancellation and mid-air world pause. The original wheel is suppressed only at rendering; all supported routines require matching original-code hashes. Nineteen model renders and 136 HUD/vendor texture aliases were checked against all nineteen planets. Native weapon physics and collision are retained.
 
 - Installierter Player: Rift Modern 0.12.0 und die separat vorhandene lokale Integration laden laut `mods/status.json`. `player/log.txt` enthält keinen Mod-Ladefehler. Persönliche Optionen, Launcher-Profil, Mod-Einstellungen und `card.bin` bleiben nach dem Lade-Test bytegleich. Händlerbilder visuell bestätigt; 754 Ersetzungen im geprüften Shop-Lauf, keine abgelehnten Bilder. Die Händler-Panels verwenden weiterhin die originalen Render-Targets, das eigene Auswahlrad zeichnet seine Bilder direkt hochauflösend.
+
+
+## HQ Texture Remake 2.0.0 — 01.11.2026
+
+4.415 unterschiedliche RGBA-Grundtexturen aus allen 19 Planetendatensätzen plus Titel, globalem HUD, Schiffen und Warp-Bundle. 26.818 eindeutige Ersetzungsnamen einschließlich Mips sowie T8-/T8H-HUD-Varianten. Alle Welt-Tabellen wurden ohne unlesbaren Eintrag erfasst. Drei gemeinsam verwendete Mip-Zuordnungen bevorzugen die direkte Originalquelle. Alle Ausgaben sind exakt 4× so breit und hoch wie das jeweilige Original, Alpha liegt in 0..128. PNG-Prüfsummen stehen in `mods/hq-texture-remake/build-receipt.json`.
+
+RGB: lokales Real-ESRGAN x4plus, 16 Pixel periodischer Rand; Alpha getrennt bilinear interpoliert, Mips aus der HQ-Basis mit Box-Filter. 26.818 installierte Dateihashes wurden nach dem Kopieren geprüft. Das alte installierte Pack ist gesichert.
+
+| Im Player geladener Datensatz | Welt-Ersetzungen bereit | Hauptketten RGBA8 | Fehlgeschlagen | Über Budget |
+| --- | ---: | ---: | ---: | ---: |
+| Veldin (0) | 402 | 330,8 MB | 0 | 0 |
+| Novalis (1) | 616 | 528,8 MB | 0 | 0 |
+| Gemlik-Basis (13) | 501 | 511,1 MB | 0 | 0 |
+| Letztes Veldin (18) | 605 | 500,6 MB | 0 | 0 |
+
+Novalis, Gemlik und letztes Veldin wurden mit getrennten Testspielständen visuell geprüft. Für Novalis und letztes Veldin meldet der HUD-Pfad keine fehlenden oder abgelehnten Namen; Gemlik hat drei nicht durch statische Quellen abgedeckte Laufzeitnamen, keine abgelehnten Bilder. Bei parallelen Lade-Tests gab es jeweils eine einzelne Script-Zeitwarnung; kein Script wurde gestoppt. Keine Mod-Ladefehler. Das ist kein vollständiger Spieldurchlauf aller Planeten. Dynamische Render-Targets, Videos und vom nativen Player ausgeschlossene Spezial-Slots sind keine ersetzbaren statischen Texturen.
+
+Die zwei eigenständigen ZIP-Teile bilden zusammen ein Pack. Beide CRC-geprüft; SHA-256-Prüfsummen liegen bei. Aufgrund der Größe liegen die PNG-Dateien in den GitHub-Release-Paketen; das Repository enthält Manifest, Dokumentation und vollständige Dateiprüfsummen. Es werden keine Spielstände, Disc-Dateien, Programme oder fremden Mods mitgeliefert.
+
+### English
+
+The 2.0.0 pack contains 4,415 unique base textures and 26,818 replacement PNGs. All readable world tables across 19 planet datasets were exported, alongside named extra, HUD, title, ship and warp sources. Every output has exactly four times the source width and height, with original PS2 alpha preserved separately. Installed file hashes were checked after copying. Native loading of datasets 0, 1, 13 and 18 reported zero failed replacements and zero budget overruns. Novalis, Gemlik and final Veldin captures were inspected. Parallel loading produced isolated script-time warnings without stopping a mod. These mapping and loading checks do not constitute a full playthrough. Both required release ZIP parts passed CRC checks; hashes are included. Runtime-generated images and native special-case exclusions are outside static replacement coverage.
+
+- Abschließender Lauf mit der tatsächlichen Installation und dem persönlichen Spielstand: Kerwan (3), 434 Welt-Ersetzungen / 371,9 MB Hauptketten, 0 fehlgeschlagen und 0 über Budget. Kein Mod-Ladefehler und keine Script-Zeitwarnung in diesem Lauf. `mods/status.json` führt Rift Modern 0.12.0 und die bereits separat installierte lokale Integration als geladen. `player/log.txt` erkennt HQ Texture Remake 2.0.0; die 136 doppelten Textur-Namen werden wie vorgesehen zugunsten von Rift Modern aufgelöst. Spielstand, Mod-Einstellungen, Player-Optionen und Launcher-Profil sind weiterhin bytegleich mit der Sicherung.
+
+Final live-installation check: Kerwan loaded 434 world replacements (371.9 MB main chains), with no failures, no budget overrun and no script-time warning. Personal save and settings remained byte-identical. The 136 shared weapon-picture names correctly prefer Rift Modern.

@@ -3,8 +3,8 @@
   "id": "hq-texture-remake",
   "name": "HQ Texture Remake",
   "author": "Taurus0815",
-  "version": "1.0.0",
-  "description": "Originalgetreue 4x-Hochskalierung der Texturen von Ratchet, Clank und allen gehaltenen Waffen/Gadgets inklusive Omniwrench. Real-ESRGAN x4plus, originale Transparenz, passende Mipmaps.",
+  "version": "2.0.0",
+  "description": "Faithful local 4x upscale of all readable static world tables across 19 planets plus named HUD, sky, effects, title, ship and warp textures. Original UVs and PS2 alpha retained.",
   "game": "rac1",
   "kind": "textures",
   "serials": [
