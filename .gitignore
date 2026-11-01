@@ -1,0 +1,10 @@
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+player/
+toolchain/
+.cache/
+mods/active.txt
+mods/settings.json
+mods/status.json

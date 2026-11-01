@@ -1,0 +1,507 @@
+{
+  "name": "HQ Texture Remake",
+  "version": "1.0.0",
+  "unique_base_textures": 30,
+  "replacement_files": 70,
+  "original_levels_checked": 19,
+  "scale": 4,
+  "model": "realesrgan-x4plus",
+  "method": "local NCNN Vulkan, periodic 16px padding cropped after 4x inference; original PS2 alpha interpolated separately; mipmaps box filtered from HQ base",
+  "validation": [
+    {
+      "base": "fc3da34b9af7c4d1-b89716a2cba33fe6-00002213",
+      "source": [
+        256,
+        256
+      ],
+      "output": [
+        1024,
+        1024
+      ],
+      "factor": 4,
+      "alpha_max": 128,
+      "alpha_min": 30
+    },
+    {
+      "base": "6a9198f5889cd9d3-14d2af554109291b-00001dd3",
+      "source": [
+        128,
+        128
+      ],
+      "output": [
+        512,
+        512
+      ],
+      "factor": 4,
+      "alpha_max": 128,
+      "alpha_min": 0
+    },
+    {
+      "base": "a84a00b7ccefcc4-24a4a799f186ef98-00001993",
+      "source": [
+        64,
+        64
+      ],
+      "output": [
+        256,
+        256
+      ],
+      "factor": 4,
+      "alpha_max": 128,
+      "alpha_min": 0
+    },
+    {
+      "base": "daf5baa4f602a541-69c47ba043c23a4e-00001553",
+      "source": [
+        32,
+        32
+      ],
+      "output": [
+        128,
+        128
+      ],
+      "factor": 4,
+      "alpha_max": 128,
+      "alpha_min": 128
+    },
+    {
+      "base": "da168d87404bbf51-8cd1a2072d8fe9ad-00001dd3",
+      "source": [
+        128,
+        128
+      ],
+      "output": [
+        512,
+        512
+      ],
+      "factor": 4,
+      "alpha_max": 128,
+      "alpha_min": 128
+    },
+    {
+      "base": "80ea38408a5e1a4f-d09988b9ed8eeb83-00001dd3",
+      "source": [
+        128,
+        128
+      ],
+      "output": [
+        512,
+        512
+      ],
+      "factor": 4,
+      "alpha_max": 128,
+      "alpha_min": 128
+    },
+    {
+      "base": "127c7ab1ef6c6c6a-c5cefe21fcc9b976-00001dd3",
+      "source": [
+        128,
+        128
+      ],
+      "output": [
+        512,
+        512
+      ],
+      "factor": 4,
+      "alpha_max": 128,
+      "alpha_min": 128
+    },
+    {
+      "base": "f3bc44a96845c80f-bbe7e35df1c9c3b5-00001dd3",
+      "source": [
+        128,
+        128
+      ],
+      "output": [
+        512,
+        512
+      ],
+      "factor": 4,
+      "alpha_max": 128,
+      "alpha_min": 128
+    },
+    {
+      "base": "5293403d6e749eae-e8075d3e0390c2ff-00001dd3",
+      "source": [
+        128,
+        128
+      ],
+      "output": [
+        512,
+        512
+      ],
+      "factor": 4,
+      "alpha_max": 128,
+      "alpha_min": 128
+    },
+    {
+      "base": "725b90369973dd71-5e1deb3579660cdd-00001dd3",
+      "source": [
+        128,
+        128
+      ],
+      "output": [
+        512,
+        512
+      ],
+      "factor": 4,
+      "alpha_max": 128,
+      "alpha_min": 128
+    },
+    {
+      "base": "48cc5aa842581687-fcfde7eaec320434-00001dd3",
+      "source": [
+        128,
+        128
+      ],
+      "output": [
+        512,
+        512
+      ],
+      "factor": 4,
+      "alpha_max": 128,
+      "alpha_min": 128
+    },
+    {
+      "base": "ea73b4ceea6113f0-d931298fd74d12ba-00001dd3",
+      "source": [
+        128,
+        128
+      ],
+      "output": [
+        512,
+        512
+      ],
+      "factor": 4,
+      "alpha_max": 128,
+      "alpha_min": 128
+    },
+    {
+      "base": "6c0254e0ab391ea4-f589296b910ecf28-00001dd3",
+      "source": [
+        128,
+        128
+      ],
+      "output": [
+        512,
+        512
+      ],
+      "factor": 4,
+      "alpha_max": 128,
+      "alpha_min": 128
+    },
+    {
+      "base": "2a8f19670cf37f2c-6c5e79ca5bc19428-00001993",
+      "source": [
+        64,
+        64
+      ],
+      "output": [
+        256,
+        256
+      ],
+      "factor": 4,
+      "alpha_max": 128,
+      "alpha_min": 128
+    },
+    {
+      "base": "7319344c5e9c1d0c-8effa55170deed88-00001993",
+      "source": [
+        64,
+        64
+      ],
+      "output": [
+        256,
+        256
+      ],
+      "factor": 4,
+      "alpha_max": 128,
+      "alpha_min": 128
+    },
+    {
+      "base": "df028ec88cc2ccda-8c9db18c386e7b95-00001993",
+      "source": [
+        64,
+        64
+      ],
+      "output": [
+        256,
+        256
+      ],
+      "factor": 4,
+      "alpha_max": 128,
+      "alpha_min": 128
+    },
+    {
+      "base": "13a8300849f7e266-a7c60fe0089fbd1a-00001dd3",
+      "source": [
+        128,
+        128
+      ],
+      "output": [
+        512,
+        512
+      ],
+      "factor": 4,
+      "alpha_max": 128,
+      "alpha_min": 128
+    },
+    {
+      "base": "786d366ac1cb86c0-2f809b0787b84f9a-00001993",
+      "source": [
+        64,
+        64
+      ],
+      "output": [
+        256,
+        256
+      ],
+      "factor": 4,
+      "alpha_max": 128,
+      "alpha_min": 128
+    },
+    {
+      "base": "33c65ed0ac5995ef-d298abba604dd55-00001dd3",
+      "source": [
+        128,
+        128
+      ],
+      "output": [
+        512,
+        512
+      ],
+      "factor": 4,
+      "alpha_max": 128,
+      "alpha_min": 128
+    },
+    {
+      "base": "4c1fab6b70e705ea-168e8d640b051570-00001993",
+      "source": [
+        64,
+        64
+      ],
+      "output": [
+        256,
+        256
+      ],
+      "factor": 4,
+      "alpha_max": 128,
+      "alpha_min": 128
+    },
+    {
+      "base": "1dde06b7b3309e6-ec7070073f20ec69-00001993",
+      "source": [
+        64,
+        64
+      ],
+      "output": [
+        256,
+        256
+      ],
+      "factor": 4,
+      "alpha_max": 128,
+      "alpha_min": 128
+    },
+    {
+      "base": "5f89141e1ce5613f-a767ef3030821576-00001dd3",
+      "source": [
+        128,
+        128
+      ],
+      "output": [
+        512,
+        512
+      ],
+      "factor": 4,
+      "alpha_max": 128,
+      "alpha_min": 3
+    },
+    {
+      "base": "55f727b7f585e245-bde91811af5b4908-00002213",
+      "source": [
+        256,
+        256
+      ],
+      "output": [
+        1024,
+        1024
+      ],
+      "factor": 4,
+      "alpha_max": 128,
+      "alpha_min": 128
+    },
+    {
+      "base": "d0ee830cfcbf192a-29b9a8f256c48447-00001993",
+      "source": [
+        64,
+        64
+      ],
+      "output": [
+        256,
+        256
+      ],
+      "factor": 4,
+      "alpha_max": 128,
+      "alpha_min": 128
+    },
+    {
+      "base": "401b1e9780d99a6a-c9645277e367fd0-00001dd3",
+      "source": [
+        128,
+        128
+      ],
+      "output": [
+        512,
+        512
+      ],
+      "factor": 4,
+      "alpha_max": 128,
+      "alpha_min": 128
+    },
+    {
+      "base": "80cd97eb7fb1c73c-ee611c4b5f513ca1-00001dd3",
+      "source": [
+        128,
+        128
+      ],
+      "output": [
+        512,
+        512
+      ],
+      "factor": 4,
+      "alpha_max": 128,
+      "alpha_min": 128
+    },
+    {
+      "base": "cc73c731d90104e8-acb5102dc98edeff-00001993",
+      "source": [
+        64,
+        64
+      ],
+      "output": [
+        256,
+        256
+      ],
+      "factor": 4,
+      "alpha_max": 128,
+      "alpha_min": 30
+    },
+    {
+      "base": "7e30d97eae548c37-b603c3dd1e93cf5e-00001993",
+      "source": [
+        64,
+        64
+      ],
+      "output": [
+        256,
+        256
+      ],
+      "factor": 4,
+      "alpha_max": 128,
+      "alpha_min": 128
+    },
+    {
+      "base": "1d4870895580cf2f-ea486a3ddcebcac8-00001dd3",
+      "source": [
+        128,
+        128
+      ],
+      "output": [
+        512,
+        512
+      ],
+      "factor": 4,
+      "alpha_max": 128,
+      "alpha_min": 128
+    },
+    {
+      "base": "5b52e6b1cefab9ba-1f119bb1af6ead7-00001dd3",
+      "source": [
+        128,
+        128
+      ],
+      "output": [
+        512,
+        512
+      ],
+      "factor": 4,
+      "alpha_max": 128,
+      "alpha_min": 34
+    }
+  ],
+  "ambiguous_mip_aliases": [],
+  "tool_archive_sha256": "abc02804e17982a3be33675e4d471e91ea374e65b70167abc09e31acb412802d",
+  "source_inventory_sha256": "dfcc9d2324717aed15be0d62e114650f76ee04c485ad3c553f8056da5dae52a2",
+  "files": {
+    "10235c737f05078f-24a4a799f186ef98-00001113.png": "faf2e3e309b3824f9bb3907670a4196068ab96d830516199ef0d511e30fa29a8",
+    "127c7ab1ef6c6c6a-c5cefe21fcc9b976-00001dd3.png": "0bd3b76a42d4ddaac6cbe83f01d912e318abde6588b45976a240c6b9efc02f4b",
+    "13a8300849f7e266-a7c60fe0089fbd1a-00001dd3.png": "b28e38707c2eb9a0c034f3e95f44a49817d39e7904301a618595eb9b12bef2b6",
+    "1d4870895580cf2f-ea486a3ddcebcac8-00001dd3.png": "bc8afce6c0ad84c143ba3814d85a43d6f3219b09ebe22a9aac1929926e2b623a",
+    "1dde06b7b3309e6-ec7070073f20ec69-00001993.png": "48d486c096e9f94dbe5527bc7180984b60baa09da12ead4f77e2332f3cbc10a2",
+    "2018fdbb5633d874-b89716a2cba33fe6-00002213.png": "19ded1a17d86b3c4891bab1adb5e2930a397ec5d5e93a006da5b5152f07859e0",
+    "2098366d45c4f43-1f119bb1af6ead7-00001dd3.png": "ea6326083e9ed4ff28f6e1bb0ff7d1d3ba4e78b2e77ef33ee4e41c70d2479f7c",
+    "2a8f19670cf37f2c-6c5e79ca5bc19428-00001993.png": "bf9cd599b31e5310b8d47987514aea28e658471537b777bd3dd0171cc9d99ca7",
+    "2c71cb94fc60e8e-b89716a2cba33fe6-00001dd3.png": "f1ff62887f15df238667d747180e67a8e1ab16c988ef6853d72df80df54d7fe6",
+    "33c65ed0ac5995ef-d298abba604dd55-00001dd3.png": "dddd151e35601366491b7c628e68b4f1b6b45c9941953c25884a60c1587f8d13",
+    "36fa3dc7db418b54-14d2af554109291b-00001553.png": "983aba43dbd1acc4343abb18ab67760e84953a6b2b85aceaf0b092bf592702b2",
+    "3795fe7f0c33164e-6c5e79ca5bc19428-00000cd3.png": "1cf8a28640f7f2ec8ee52878fa1e56711b621c2596ff4dd2294c3e2c17d00aa9",
+    "385fc4dde40f52c0-24a4a799f186ef98-00001553.png": "644f5ae1bcc20aa528075005308b2cbfcb233dfdab6725821fe44d2f232f3bc8",
+    "38966d6089e1cac2-b603c3dd1e93cf5e-00001553.png": "9a2fac8661ec6f6f2e7b410a450ca1ecdefb39f9980f09b883362c280390e1a4",
+    "3ed99b93de84fea1-b89716a2cba33fe6-00001993.png": "0fb5d8857651bdc694e44299387a383b627fd3bec5c81f5e227cd940365aa12d",
+    "401b1e9780d99a6a-c9645277e367fd0-00001dd3.png": "73033ed6194c422655c41b41a9934eefbd9119f3e9bfa09d2514ec8602df77cf",
+    "40629be870ee7fb5-b603c3dd1e93cf5e-00001113.png": "2aa14e99a5fa0a73bdf6fe8a67db2a385320cded59591edfbc7d86fee54f3e1f",
+    "472f95b10ecbb4a5-24a4a799f186ef98-00001553.png": "644f5ae1bcc20aa528075005308b2cbfcb233dfdab6725821fe44d2f232f3bc8",
+    "48cc5aa842581687-fcfde7eaec320434-00001dd3.png": "3e9857d7a61e3056a3ec56f2ad9a04cf2544faacb4e4a30da682af89f4269053",
+    "49e4f98b533eb37-b89716a2cba33fe6-00001dd3.png": "f1ff62887f15df238667d747180e67a8e1ab16c988ef6853d72df80df54d7fe6",
+    "4c1fab6b70e705ea-168e8d640b051570-00001993.png": "29022d0e621bea44156404a3240ce7582a63f197e5626cd08b83f1740553d5f8",
+    "5027d32d1d6a7d90-b603c3dd1e93cf5e-00000cd3.png": "ed5d2da028d071f346e9528e928df0f74416e58ef9a13aad76170ca5ff5de103",
+    "5293403d6e749eae-e8075d3e0390c2ff-00001dd3.png": "bfa0e7ffda163c795edc5ceeade3df70adf83caa5173a0298b0c9f807561bdf8",
+    "55d134afbbc0cf4a-1f119bb1af6ead7-00001993.png": "dcf60c5ee90a1a005daa5d6ab6bcfe6fd4aef921f1162929063109a8e1ca51f4",
+    "55f727b7f585e245-bde91811af5b4908-00002213.png": "d6084c988f674036a2415cff0f0aad1ef75b040d609a80919567c27aaa6fcf84",
+    "5610c8ac650d46a7-b89716a2cba33fe6-00001993.png": "0fb5d8857651bdc694e44299387a383b627fd3bec5c81f5e227cd940365aa12d",
+    "5b52e6b1cefab9ba-1f119bb1af6ead7-00001dd3.png": "ea6326083e9ed4ff28f6e1bb0ff7d1d3ba4e78b2e77ef33ee4e41c70d2479f7c",
+    "5dbb04ab590c8d07-b89716a2cba33fe6-00001553.png": "6817621fb27447a89a4aa295063cb485c0f9acea3744e5d56879514e202ed4ee",
+    "5eff3e259aac5ceb-6c5e79ca5bc19428-00001553.png": "06b5bd10cd6157f299797bc88da716b1446d0a4014aab5bb06995324aa259356",
+    "5f89141e1ce5613f-a767ef3030821576-00001dd3.png": "6833fe4255198c3a044248ee912b561332c1aec182da9ddcda2f6ea4d1a752b1",
+    "6a9198f5889cd9d3-14d2af554109291b-00001dd3.png": "2636ee17ddbe403ab414232adbb759c2119f1a0c737e5ad7cd3aaf783e0d707d",
+    "6b8a48d902734d9-6c5e79ca5bc19428-00001113.png": "97f03a192547587cfbfaf172795a7cfa29ecf8137c0eca922c21daa594eab784",
+    "6c0254e0ab391ea4-f589296b910ecf28-00001dd3.png": "41c5df761352bfcab5992b497735039e4acfaff73861b945e5ad1e126d59cf6a",
+    "725b90369973dd71-5e1deb3579660cdd-00001dd3.png": "45e01b3ea12bcc4f9c3f838e6d5811566a67f09e99843f417918252747341a6b",
+    "7319344c5e9c1d0c-8effa55170deed88-00001993.png": "38ce36af4cbaaff2511fa24f427616e2e8559cb9e5fd0c1aece12d57d7dddcb6",
+    "770f39f52bb8a5ea-6c5e79ca5bc19428-00001553.png": "06b5bd10cd6157f299797bc88da716b1446d0a4014aab5bb06995324aa259356",
+    "786d366ac1cb86c0-2f809b0787b84f9a-00001993.png": "0289a66d65a369db231013fa2d96d64026f6f55fe2371a25e7098594133e94e8",
+    "7c8d768f8ec25218-14d2af554109291b-00001993.png": "e8be298b6482137d9ff533615080f603e8cf6bee6f0a9df9c4947c3436dbba81",
+    "7e30d97eae548c37-b603c3dd1e93cf5e-00001993.png": "0c143ac9a1845f606caa84dc68e0fa101c6f14fa76e23dc5ae0cf98758e1614a",
+    "7e7c7a84833badff-24a4a799f186ef98-00001113.png": "faf2e3e309b3824f9bb3907670a4196068ab96d830516199ef0d511e30fa29a8",
+    "807a2d7151af8b6-24a4a799f186ef98-00000cd3.png": "127ec34506d8544d30803e0fa149524913cff220f293ca59a6011c0e8ebfcf92",
+    "80cd97eb7fb1c73c-ee611c4b5f513ca1-00001dd3.png": "374a3f0713cfdc47d389c5ee2c147d9f1dd3f1a9fa930c4c6e893d05680f081d",
+    "80ea38408a5e1a4f-d09988b9ed8eeb83-00001dd3.png": "67a5a3cffb89d6225741d40be0666c3844cee9de7aad6bbb14bef61cdf89bcd5",
+    "86ff82cc23bee52d-14d2af554109291b-00001dd3.png": "2636ee17ddbe403ab414232adbb759c2119f1a0c737e5ad7cd3aaf783e0d707d",
+    "88eae2c2524da644-1f119bb1af6ead7-00001993.png": "dcf60c5ee90a1a005daa5d6ab6bcfe6fd4aef921f1162929063109a8e1ca51f4",
+    "8ca640e952001848-6c5e79ca5bc19428-00001113.png": "97f03a192547587cfbfaf172795a7cfa29ecf8137c0eca922c21daa594eab784",
+    "909498d03860346-69c47ba043c23a4e-00000cd3.png": "2678b5318b98be49c7507a453c15757eb5d38fb6d66ff51c9006101baf4057f1",
+    "996c6e303cb57bb8-b603c3dd1e93cf5e-00001553.png": "9a2fac8661ec6f6f2e7b410a450ca1ecdefb39f9980f09b883362c280390e1a4",
+    "9adadf41087ddb4-1f119bb1af6ead7-00001553.png": "4d2ac5395cd6af5549974eb6a524c952857c8bcb93f796e34e2635a246ee4036",
+    "9c47b9e00e0f39e0-b603c3dd1e93cf5e-00001993.png": "0c143ac9a1845f606caa84dc68e0fa101c6f14fa76e23dc5ae0cf98758e1614a",
+    "a06eb46e2665509b-14d2af554109291b-00001113.png": "470465eebcecb8b2a931ff315744ecfe25bdf9d497a6bac43c45be71ba313005",
+    "a84a00b7ccefcc4-24a4a799f186ef98-00001993.png": "673813869701bab398cda74eb8c020ef09dda79c982f2be249a748f8315eb024",
+    "aa23b529b9dc797e-1f119bb1af6ead7-00001113.png": "10686bfeb61042991ab6ebf82636984f4cd5e33363246193ee715fa5e2f73f8f",
+    "b711385ca3fe99d1-1f119bb1af6ead7-00001553.png": "4d2ac5395cd6af5549974eb6a524c952857c8bcb93f796e34e2635a246ee4036",
+    "c2d95e2de2108e6e-24a4a799f186ef98-00001993.png": "673813869701bab398cda74eb8c020ef09dda79c982f2be249a748f8315eb024",
+    "c640fd49663416ad-6c5e79ca5bc19428-00001993.png": "bf9cd599b31e5310b8d47987514aea28e658471537b777bd3dd0171cc9d99ca7",
+    "cc73c731d90104e8-acb5102dc98edeff-00001993.png": "d060cc9a3cbdd19d4b0a49df84368aa808cc4a876debfdec0f253e58ce7dd8ec",
+    "d0ee830cfcbf192a-29b9a8f256c48447-00001993.png": "90d83e37d35850c4913fb26b945f061de6e0195931a03bf9b0afbcc314a99395",
+    "da168d87404bbf51-8cd1a2072d8fe9ad-00001dd3.png": "aa7e5d8dec7712293ab37b4d975efd069530abb39d15922cb030d868dbba6938",
+    "daf5baa4f602a541-69c47ba043c23a4e-00001553.png": "38e228304d5f26cb88f60452306d9d028edbf30a3b9561e31dd6bca1f5997026",
+    "dd3ea1cba3754062-b603c3dd1e93cf5e-00001113.png": "2aa14e99a5fa0a73bdf6fe8a67db2a385320cded59591edfbc7d86fee54f3e1f",
+    "df028ec88cc2ccda-8c9db18c386e7b95-00001993.png": "d9030fa978461966ecb1955ae0c5c51bd8826ab5086317f8450787d5790bb642",
+    "e9ad51141fadf54-69c47ba043c23a4e-00001553.png": "38e228304d5f26cb88f60452306d9d028edbf30a3b9561e31dd6bca1f5997026",
+    "ea73b4ceea6113f0-d931298fd74d12ba-00001dd3.png": "c88d4a16f5fb9a929a67590b319a0bfdeff058bf57f0a5acbecac0f8003d7993",
+    "f0dd96999c48d62d-14d2af554109291b-00001993.png": "e8be298b6482137d9ff533615080f603e8cf6bee6f0a9df9c4947c3436dbba81",
+    "f3bc44a96845c80f-bbe7e35df1c9c3b5-00001dd3.png": "e0483df17a1faefad52345b7815dca361d615fde3fb9ed1fe0b10ecc2c9ce05a",
+    "f7c7d65cd2b7a50b-69c47ba043c23a4e-00001113.png": "184029ef9be17dd517bdcc1f4a8863cdbd6717046b6a923b9964d9449a1eacfe",
+    "fb13a8e21a62bfd0-69c47ba043c23a4e-00001113.png": "184029ef9be17dd517bdcc1f4a8863cdbd6717046b6a923b9964d9449a1eacfe",
+    "fb4e3c031650804e-14d2af554109291b-00001553.png": "983aba43dbd1acc4343abb18ab67760e84953a6b2b85aceaf0b092bf592702b2",
+    "fc3da34b9af7c4d1-b89716a2cba33fe6-00002213.png": "19ded1a17d86b3c4891bab1adb5e2930a397ec5d5e93a006da5b5152f07859e0"
+  }
+}

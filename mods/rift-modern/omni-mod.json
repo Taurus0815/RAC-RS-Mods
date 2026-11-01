@@ -1,0 +1,238 @@
+{
+  "format": 2,
+  "id": "rift-modern",
+  "name": "Rift Modern",
+  "version": "0.11.0",
+  "author": "Taurus0815",
+  "description": "Rift-inspired HUD and complete native menu skin, double-tap shoulder movement, native-timed paused Quick Select and responsive movement for RAC-RS.",
+  "license": "MIT",
+  "type": "script",
+  "api": "1.3",
+  "scripts": [
+    "main.luau"
+  ],
+  "games": {
+    "rac1": [
+      "pal",
+      "ntsc"
+    ]
+  },
+  "hooks": [
+    "rac1.player.approach_speed"
+  ],
+  "optional_hooks": [
+    "rac1.omni.hud.health_draw",
+    "rac1.player.advance_animation",
+    "rac1.omni.hero.items_attach",
+    "rac1.omni.damage.build_hit",
+    "rac1.omni.weapon.quick_select",
+    "rac1.omni.vendor.open"
+  ],
+  "settings": [
+    {
+      "key": "walk_shoulder",
+      "name": "Double-tap aim for shoulder movement",
+      "description": "Two short aim taps toggle shoulder framing plus camera-relative side/back movement. Starts off. A held aim button remains temporary aiming; launcher controls and native collision are preserved.",
+      "type": "bool",
+      "default": true
+    },
+    {
+      "default": true,
+      "name": "Modern movement",
+      "type": "bool",
+      "key": "modern_movement"
+    },
+    {
+      "min": 1.0,
+      "step": 0.05,
+      "key": "movement_response",
+      "default": 1.6,
+      "max": 8.8,
+      "name": "Acceleration and braking",
+      "type": "float"
+    },
+    {
+      "default": true,
+      "name": "Modern HUD",
+      "type": "bool",
+      "key": "modern_hud"
+    },
+    {
+      "min": 0.8,
+      "step": 0.05,
+      "key": "hud_scale",
+      "default": 1.0,
+      "max": 1.15,
+      "name": "HUD scale",
+      "type": "float"
+    },
+    {
+      "default": true,
+      "name": "Modern bolts panel",
+      "type": "bool",
+      "key": "show_bolts"
+    },
+    {
+      "default": true,
+      "name": "Modern weapon panel",
+      "type": "bool",
+      "key": "show_weapon"
+    },
+    {
+      "choices": [
+        {
+          "name": "Arsenal Mastery integration",
+          "value": "arsenal"
+        },
+        {
+          "name": "Original game health",
+          "value": "game"
+        }
+      ],
+      "key": "health_source",
+      "description": "Original game health works standalone. External mode delegates health display to a separately installed compatible Nanotech HUD.",
+      "default": "game",
+      "name": "Health source",
+      "type": "choice"
+    },
+    {
+      "key": "movement_key",
+      "description": "J by default. Avoid keys assigned to game actions.",
+      "default": "KeyJ",
+      "name": "Toggle movement key",
+      "type": "keybind"
+    },
+    {
+      "key": "hud_key",
+      "description": "K by default. Match the Rift health key under Arsenal Mastery.",
+      "default": "KeyK",
+      "name": "Toggle HUD key",
+      "type": "keybind"
+    },
+    {
+      "key": "modern_menu",
+      "name": "Modern menus",
+      "type": "bool",
+      "default": true,
+      "description": "Themes title/load/options, pause and its subpages, vendor and dialogs in navy, cyan and violet. Original menu view remains available with the menu key."
+    },
+    {
+      "key": "controller_menu_back",
+      "name": "Rift controller menu Back",
+      "type": "bool",
+      "default": true,
+      "description": "Circle/B returns from menus with the installed LT-aim/RT-fire layout. Disable after changing legacy L2 away from Circle/B."
+    },
+    {
+      "key": "menu_key",
+      "name": "Original menu view key",
+      "type": "keybind",
+      "default": "KeyU",
+      "description": "Toggle the native pause-menu view while paused."
+    },
+    {
+      "key": "wrench_speed",
+      "name": "Wrench swing speed",
+      "type": "float",
+      "default": 1.6,
+      "min": 1.0,
+      "max": 4.0,
+      "step": 0.05,
+      "description": "Grounded wrench swings only; 1.0 restores original speed. Damage per hit is unchanged."
+    },
+    {
+      "key": "pause_wheel",
+      "name": "Pause during Quick Select",
+      "type": "bool",
+      "default": true,
+      "description": "Hold Triangle/Y for a radial selector with real native Pause. Release to equip and resume. Circle/B cancels."
+    },
+    {
+      "max": 4.0,
+      "description": "Jump + wrench animation speed; preserves native landing physics.",
+      "min": 1.0,
+      "step": 0.05,
+      "key": "slam_speed",
+      "type": "float",
+      "name": "Overhead wrench speed",
+      "default": 1.6
+    },
+    {
+      "max": 10.0,
+      "description": "Extra crate wave when the overhead strike lands. Set 0 for original reach.",
+      "min": 0.0,
+      "step": 0.5,
+      "key": "slam_crate_radius",
+      "type": "float",
+      "name": "Overhead crate radius (m)",
+      "default": 6.0
+    },
+    {
+      "max": 5.0,
+      "description": "Native wrench damage to nearby enemies on overhead ground impact. Set 0 to disable.",
+      "min": 0.0,
+      "step": 0.25,
+      "key": "slam_enemy_radius",
+      "type": "float",
+      "name": "Overhead enemy radius (m)",
+      "default": 2.5
+    },
+    {
+      "max": 3.0,
+      "description": "Multiplier of native bolt magnet distance and height.",
+      "min": 1.0,
+      "step": 0.25,
+      "key": "bolt_radius",
+      "type": "float",
+      "name": "Bolt attraction radius",
+      "default": 2.0
+    }
+  ],
+  "presets": [
+    {
+      "values": {
+        "walk_shoulder": true,
+        "hud_scale": 1.0,
+        "show_bolts": true,
+        "movement_response": 1.6,
+        "show_weapon": true,
+        "movement_key": "KeyJ",
+        "modern_hud": true,
+        "hud_key": "KeyK",
+        "modern_movement": true,
+        "health_source": "game",
+        "wrench_speed": 1.6,
+        "pause_wheel": true,
+        "slam_speed": 1.6,
+        "bolt_radius": 2.0,
+        "slam_crate_radius": 6.0,
+        "slam_enemy_radius": 2.5
+      },
+      "name": "Rift Modern",
+      "id": "rift_modern"
+    },
+    {
+      "values": {
+        "modern_movement": true,
+        "movement_response": 2.0
+      },
+      "name": "Fast",
+      "id": "fast"
+    },
+    {
+      "values": {
+        "modern_movement": false,
+        "walk_shoulder": false,
+        "modern_hud": true,
+        "wrench_speed": 1.0,
+        "pause_wheel": false,
+        "slam_speed": 1.0,
+        "bolt_radius": 1.0,
+        "slam_crate_radius": 0.0,
+        "slam_enemy_radius": 0.0
+      },
+      "name": "HUD only",
+      "id": "hud_only"
+    }
+  ]
+}

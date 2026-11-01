@@ -1,0 +1,1026 @@
+--- a/rac-rs/src/retail.rs
++++ b/rac-rs/src/retail.rs
+@@ -294,3 +294,6 @@
+ 	/// `--title`: the boot to the game's own title screen (retail/title_boot.rs); None without the flag.
+ 	tb: Option<title_boot::Boot>,
+ }
++
++/// Local Rift Modern presentation bridge.
++pub mod rift_ui;
+--- a/rac-rs/src/retail/modcam.rs
++++ b/rac-rs/src/retail/modcam.rs
+@@ -430,6 +430,8 @@
+ 	blend: u32,
+ 	/// RMB aim mode in force (the camera hand ran live with RMB held), and the last value logged.
+ 	aiming: bool,
++	/// Latched shoulder locomotion; never a synthetic weapon-aim input.
++	walking: bool,
+ 	aim_logged: bool,
+ 	aim_poked: bool,
+ 	/// Aim lift: fields into the blend (0..=AIM_BLEND), the smoothed ceiling limit and the lift in force (m).
+@@ -471,6 +473,7 @@
+ 	fr: FLAT,
+ 	blend: 0,
+ 	aiming: false,
++	walking: false,
+ 	aim_logged: false,
+ 	aim_poked: false,
+ 	aim_t: 0,
+@@ -1180,7 +1183,7 @@
+ /// missing within `drop_depth`) and, one direction per field (left, right, up), how open the space around the pivot is.
+ fn dyn_probe(c: &mut Cpu, lv: &Lv, st: &mut St, fr: &Frame, hero: [f32; 3]) {
+ 	let t = tune();
+-	if st.aiming {
++	if st.aiming || st.walking {
+ 		st.dy.drop = false;
+ 		st.dy.drop_w += (0.0 - st.dy.drop_w) * k_of(0.15);
+ 		return;
+@@ -1216,7 +1219,7 @@
+ 	let open = 0.45 * s[0] + 0.45 * s[1] + 0.10 * s[2];
+ 	let f_open = t.dist_open_min + (t.dist_open_max - t.dist_open_min) * open;
+ 	let f_run = 1.0 + t.dist_run * (st.dy.speed / 6.0).clamp(0.0, 1.0);
+-	let (goal, tau) = if st.aiming { (1.0, 0.2) } else { (f_open * f_run, t.dist_tau) };
++	let (goal, tau) = if st.aiming || st.walking { (1.0, 0.2) } else { (f_open * f_run, t.dist_tau) };
+ 	st.dy.dist_f += (goal - st.dy.dist_f) * k_of(tau);
+ }
+ 
+@@ -1337,6 +1340,7 @@
+ 	let why = classic::why(c, lv, rec, st);
+ 	if let Some(why) = why {
+ 		st.aiming = false;
++		st.walking = false;
+ 		shoulder::reset(st);
+ 		if st.live {
+ 			st.live = false;
+@@ -1436,6 +1440,8 @@
+ 	// Aim mode (RMB): the mouse keeps turning the camera as it does without RMB; nothing is picked or framed.
+ 	// Aim mode is a ground feature: on a magnetic wall retail stows the guns (0x1413fc) and the facing / aim yaw words are world-z.
+ 	st.aiming = classic::aim_mode(inp.aim, super::pcext::strafe_on(), flat, c.mem.rd8(BODY_FORM));
++	st.walking = !st.aiming && super::pcext::strafe_on() && flat && c.mem.rd8(BODY_FORM) == 0
++		&& c.mem.rd32(super::pcext::BASE) == 0x3158_4350 && c.mem.rd8(shoulder::WALK_REQUEST) == 1;
+ 	if st.aiming != st.aim_logged {
+ 		st.aim_logged = st.aiming;
+ 		eprintln!("retail: modcam aim {} (field {})", if st.aiming { "on" } else { "off" }, st.field);
+@@ -1447,15 +1453,15 @@
+ 	if dynamic {
+ 		let input = inp.look != [0, 0] || rs != [0.0, 0.0] || inp.zoom != 0 || inp.aim;
+ 		dyn_track(c, st, &fr, hero, piv, input);
+-		if !st.aiming {
++		if !st.aiming && !st.walking {
+ 			dyn_auto(st, &fr);
+ 			st.pitch = st.pitch.clamp(PITCH.0, PITCH.1);
+ 		}
+ 	}
+-	if st.aiming {
++	if st.aiming || st.walking {
+ 		face(c, st, st.yaw);
+ 	}
+-	if dynamic && !st.aiming && st.aim_t == 0 {
++	if dynamic && !st.aiming && !st.walking && st.aim_t == 0 {
+ 		dyn_follow(st, &fr, piv);
+ 	} else {
+ 		let old = st.pivot;
+@@ -1596,6 +1602,12 @@
+ 
+ /// The camera yaw Ratchet faces while RMB aim is in force (the modern camera drives and aims), else None. strafe.rs reads it
+ /// for the flips and the torso twist: modcam's own yaw state, not RAM 0x166ed8, so it is not a field behind.
++/// Facing for the native strafe solver. Does not enable reticles, lock-on or weapon aim.
++pub fn movement_yaw() -> Option<f32> {
++	let st = ST.lock().ok()?;
++	(enabled() && classic::drives(&st) && (st.aiming || st.walking) && st.live).then(|| wrap(st.yaw))
++}
++
+ pub fn aim_yaw() -> Option<f32> {
+ 	let st = ST.lock().ok()?;
+ 	(enabled() && classic::drives(&st) && st.aiming && st.live).then(|| wrap(st.yaw))
+@@ -1690,6 +1702,7 @@
+ 		if st.live && st.ran != st.field && class != 0 {
+ 			st.live = false;
+ 			st.aiming = false;
++		st.walking = false;
+ 			eprintln!("retail: modcam hands back to retail: camera class {class} (game mode {}, field {})", m.rd32(va(GAME_MODE)), st.field);
+ 		}
+ 	}
+@@ -1761,6 +1774,7 @@
+ 		st.active = true;
+ 		st.live = false;
+ 		st.aiming = false;
++		st.walking = false;
+ 		st.blend = 0;
+ 		st.level = u32::MAX;
+ 	}
+--- a/rac-rs/src/retail/modcam/shoulder.rs
++++ b/rac-rs/src/retail/modcam/shoulder.rs
+@@ -38,6 +38,8 @@
+ pub const DIST: f32 = 3.7;
+ /// Height (m) of the pivot above the orbit pivot (Ratchet's chest, `PIVOT`): Raised lifts 1.5, Shoulder keeps the reticle near his head.
+ pub const LIFT: f32 = 0.85;
++/// Optional shoulder locomotion script request in the unused old PC camera-row area.
++pub const WALK_REQUEST: u32 = super::super::pcext::BASE + 0x40;
+ /// Room the wanted shift keeps between the shifted pivot and a wall at his side (m).
+ const MARGIN: f32 = 0.3;
+ /// The shifted pivot keeps this far from a wall the side line meets (m): closer than that the shift is pulled in at `CLAMP_RATE`.
+@@ -177,11 +179,13 @@
+ 	if !flat {
+ 		reset(st);
+ 	}
+-	let target = if on() { 1.0 } else { 0.0 };
++	let walk = st.walking;
++	let shoulder = on() || walk;
++	let target = if shoulder { 1.0 } else { 0.0 };
+ 	let step = 1.0 / blend(st.sh.mix) as f32;
+ 	st.sh.mix += (target - st.sh.mix).clamp(-step, step);
+-	let ((b, cap_step), max) = (raised_params(st.sh.mix, on(), dt()), max_lift(st.sh.mix, tune()[2]));
+-	st.aim_t = next_t(st.aim_t, st.aiming, b);
++	let ((b, cap_step), max) = (raised_params(st.sh.mix, shoulder, dt()), max_lift(st.sh.mix, tune()[2]));
++	st.aim_t = next_t(st.aim_t, st.aiming || walk, b);
+ 	if st.aim_t > 0 {
+ 		let up = [st.dy.pivc[0], st.dy.pivc[1], st.dy.pivc[2] + max + AIM_CEIL];
+ 		let goal = match seg(c, lv, st.dy.pivc, up) {
+--- a/rac-rs/src/retail/strafe.rs
++++ b/rac-rs/src/retail/strafe.rs
+@@ -277,7 +277,7 @@
+ 	}
+ 	let _g = Guard;
+ 	if enabled() {
+-		if let Some(aim) = modcam::aim_yaw() {
++		if let Some(aim) = modcam::movement_yaw() {
+ 			let state = c.mem.rd32(HERO_STATE);
+ 			// (A flip's touchdown with Cross pressed is retail's own landing jump, not a chooser call: chain.rs.)
+ 			if FLIP_STATES.contains(&state) && c.mem.rd8(BODY_FORM) == 0 && c.mem.rd32(va(GAME_MODE)) == 0 {
+@@ -357,7 +357,7 @@
+ 		feel_off();
+ 		return;
+ 	}
+-	let aiming = modcam::aim_yaw().is_some() && m.cpu.mem.rd8(BODY_FORM) == 0 && m.rd32(va(GAME_MODE)) == 0;
++	let aiming = modcam::movement_yaw().is_some() && m.cpu.mem.rd8(BODY_FORM) == 0 && m.rd32(va(GAME_MODE)) == 0;
+ 	if let Ok(mut s) = ST.lock() {
+ 		s.field = s.field.wrapping_add(1);
+ 		if let Some(line) = super::strafe_feel::pre_field(m, (fin.sticks[2], fin.sticks[3]), aiming, &mut s.feel) {
+@@ -433,7 +433,7 @@
+ 	// The ground path: retail's move vector of this field (0x13f430, units per field), averaged over the last fields.
+ 	let raw = [m.rdf(HERO_MOVE), m.rdf(HERO_MOVE + 4)];
+ 	let state = m.rd32(HERO_STATE);
+-	let aim = modcam::aim_yaw();
++	let aim = modcam::movement_yaw();
+ 	let moby = m.rd32(HERO_MOBY) & 0x01ff_ffff;
+ 	let drawn = if moby != 0 { m.rdf(moby + 0x48) } else { 0.0 };
+ 	// The camera turned since the last field (the drawn yaw is the aim): the path direction and the legs keep their world heading
+@@ -581,7 +581,7 @@
+ /// The turn `turn_parts` gives the hero's parts this field (drawn - rows yaw) and the hero's origin; None while not aiming.
+ fn part_turn(m: &ee_oracle::Machine) -> Option<(f32, [f32; 3])> {
+ 	let hero = m.rd32(HERO_MOBY) & 0x01ff_ffff;
+-	if !modcam::enabled() || modcam::aim_yaw().is_none() || hero == 0 {
++	if !modcam::enabled() || modcam::movement_yaw().is_none() || hero == 0 {
+ 		return None;
+ 	}
+ 	let r0 = m.rdv3(hero + 0xc0);
+@@ -601,7 +601,7 @@
+ /// particles and flames are carried with the pack (pack_fx.rs). Draw only; RAM is not written.
+ pub fn turn_parts(m: &ee_oracle::Machine, hero: u32, held: u32, mobys: &mut [super::Moby], fx: Option<&mut super::RetailFx>) {
+ 	let hook = super::aim::take_pyro_frame();
+-	if !modcam::enabled() || modcam::aim_yaw().is_none() {
++	if !modcam::enabled() || modcam::movement_yaw().is_none() {
+ 		if let Some(fx) = fx {
+ 			pack_fx::carry(m, m.rdv3(hero + 0x10), 0.0, fx, &[]);
+ 		}
+--- a/rac-rs/src/retail/strafe/chain.rs
++++ b/rac-rs/src/retail/strafe/chain.rs
+@@ -74,7 +74,7 @@
+ 	if !matches!(to, 7 | 9) || c.mem.rd32(HERO_STATE) != 0xb || c.mem.rd32(FLIP_LANDED) == 0 || !enabled() {
+ 		return false;
+ 	}
+-	let Some(aim) = modcam::aim_yaw() else {
++	let Some(aim) = modcam::movement_yaw() else {
+ 		return false;
+ 	};
+ 	if c.mem.rd8(BODY_FORM) != 0 || c.mem.rd32(va(GAME_MODE)) != 0 || !ST.lock().is_ok_and(|s| s.feel.flipping()) {
+--- a/rac-rs/src/omni/mod.rs
++++ b/rac-rs/src/omni/mod.rs
+@@ -178,6 +178,7 @@
+ 		host::scope(c, || o.loader.tick());
+ 		native_host::sp_check(c, sp, "on_frame");
+ 	}
++	crate::retail::rift_ui::sync(c);
+ 	draw_demo::tick(c);
+ 	if n == 1 || n % 1000 == 0 {
+ 		// Queued, not written here: this runs on the retail worker thread, between two fields (logq.rs).
+--- a/rac-rs/src/omni/rac1.json
++++ b/rac-rs/src/omni/rac1.json
+@@ -3891,37 +3891,336 @@
+       "class": 0,
+       "joint_count": 111,
+       "joints": {
+-        "root": 0, "pelvis": 1, "spine_1": 2, "spine_2": 3, "spine_3": 4, "spine_4": 5,
+-        "chest": 6, "neck": 7, "head": 8, "jaw": 10, "right_leg_hip": 92, "right_knee": 93,
+-        "right_ankle": 94, "right_foot": 95, "right_toe": 96, "left_leg_hip": 98, "left_knee": 99, "left_ankle": 100,
+-        "left_foot": 101, "left_toe": 102, "right_clavicle": 52, "right_shoulder": 53, "right_elbow": 54, "right_wrist": 55,
+-        "right_hand": 56, "left_clavicle": 72, "left_shoulder": 73, "left_elbow": 74, "left_wrist": 75, "left_hand": 76,
+-        "right_thumb": 69, "left_thumb": 89, "right_finger_1": 57, "right_finger_2": 60, "right_finger_3": 63, "right_finger_4": 66,
+-        "left_finger_1": 77, "left_finger_2": 80, "left_finger_3": 83, "left_finger_4": 86, "right_ear": 44, "left_ear": 41,
+-        "tail_1": 104, "tail_2": 105, "tail_3": 106, "tail_4": 107, "tail_5": 108, "tail_6": 109,
+-        "tail_7": 110, "right_eye": 22, "left_eye": 24, "right_eye_socket": 21, "left_eye_socket": 23
++        "root": 0,
++        "pelvis": 1,
++        "spine_1": 2,
++        "spine_2": 3,
++        "spine_3": 4,
++        "spine_4": 5,
++        "chest": 6,
++        "neck": 7,
++        "head": 8,
++        "jaw": 10,
++        "right_leg_hip": 92,
++        "right_knee": 93,
++        "right_ankle": 94,
++        "right_foot": 95,
++        "right_toe": 96,
++        "left_leg_hip": 98,
++        "left_knee": 99,
++        "left_ankle": 100,
++        "left_foot": 101,
++        "left_toe": 102,
++        "right_clavicle": 52,
++        "right_shoulder": 53,
++        "right_elbow": 54,
++        "right_wrist": 55,
++        "right_hand": 56,
++        "left_clavicle": 72,
++        "left_shoulder": 73,
++        "left_elbow": 74,
++        "left_wrist": 75,
++        "left_hand": 76,
++        "right_thumb": 69,
++        "left_thumb": 89,
++        "right_finger_1": 57,
++        "right_finger_2": 60,
++        "right_finger_3": 63,
++        "right_finger_4": 66,
++        "left_finger_1": 77,
++        "left_finger_2": 80,
++        "left_finger_3": 83,
++        "left_finger_4": 86,
++        "right_ear": 44,
++        "left_ear": 41,
++        "tail_1": 104,
++        "tail_2": 105,
++        "tail_3": 106,
++        "tail_4": 107,
++        "tail_5": 108,
++        "tail_6": 109,
++        "tail_7": 110,
++        "right_eye": 22,
++        "left_eye": 24,
++        "right_eye_socket": 21,
++        "left_eye_socket": 23
+       },
+       "chains": {
+-        "right_arm": [52, 72], "left_arm": [72, 92], "right_hand": [56, 71], "left_hand": [76, 91], "right_leg": [92, 98],
+-        "left_leg": [98, 104], "tail": [104, 111], "spine": [1, 7], "ears_right": [44, 47], "ears_left": [41, 44]
++        "right_arm": [
++          52,
++          72
++        ],
++        "left_arm": [
++          72,
++          92
++        ],
++        "right_hand": [
++          56,
++          71
++        ],
++        "left_hand": [
++          76,
++          91
++        ],
++        "right_leg": [
++          92,
++          98
++        ],
++        "left_leg": [
++          98,
++          104
++        ],
++        "tail": [
++          104,
++          111
++        ],
++        "spine": [
++          1,
++          7
++        ],
++        "ears_right": [
++          44,
++          47
++        ],
++        "ears_left": [
++          41,
++          44
++        ]
+       },
+       "mirror_pairs": [
+-        [16, 17], [19, 20], [21, 23], [22, 24], [25, 29], [26, 30], [27, 31], [28, 32],
+-        [33, 35], [34, 36], [39, 40], [41, 44], [42, 45], [43, 46], [47, 48], [49, 50],
+-        [52, 72], [53, 73], [54, 74], [55, 75], [56, 76], [57, 77], [58, 78], [59, 79],
+-        [60, 80], [61, 81], [62, 82], [63, 83], [64, 84], [65, 85], [66, 86], [67, 87],
+-        [68, 88], [69, 89], [70, 90], [71, 91], [92, 98], [93, 99], [94, 100], [95, 101],
+-        [96, 102], [97, 103]
++        [
++          16,
++          17
++        ],
++        [
++          19,
++          20
++        ],
++        [
++          21,
++          23
++        ],
++        [
++          22,
++          24
++        ],
++        [
++          25,
++          29
++        ],
++        [
++          26,
++          30
++        ],
++        [
++          27,
++          31
++        ],
++        [
++          28,
++          32
++        ],
++        [
++          33,
++          35
++        ],
++        [
++          34,
++          36
++        ],
++        [
++          39,
++          40
++        ],
++        [
++          41,
++          44
++        ],
++        [
++          42,
++          45
++        ],
++        [
++          43,
++          46
++        ],
++        [
++          47,
++          48
++        ],
++        [
++          49,
++          50
++        ],
++        [
++          52,
++          72
++        ],
++        [
++          53,
++          73
++        ],
++        [
++          54,
++          74
++        ],
++        [
++          55,
++          75
++        ],
++        [
++          56,
++          76
++        ],
++        [
++          57,
++          77
++        ],
++        [
++          58,
++          78
++        ],
++        [
++          59,
++          79
++        ],
++        [
++          60,
++          80
++        ],
++        [
++          61,
++          81
++        ],
++        [
++          62,
++          82
++        ],
++        [
++          63,
++          83
++        ],
++        [
++          64,
++          84
++        ],
++        [
++          65,
++          85
++        ],
++        [
++          66,
++          86
++        ],
++        [
++          67,
++          87
++        ],
++        [
++          68,
++          88
++        ],
++        [
++          69,
++          89
++        ],
++        [
++          70,
++          90
++        ],
++        [
++          71,
++          91
++        ],
++        [
++          92,
++          98
++        ],
++        [
++          93,
++          99
++        ],
++        [
++          94,
++          100
++        ],
++        [
++          95,
++          101
++        ],
++        [
++          96,
++          102
++        ],
++        [
++          97,
++          103
++        ]
+       ],
+       "centre": [
+-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+-        18, 37, 38, 51, 104, 105, 106, 107, 108, 109, 110
++        0,
++        1,
++        2,
++        3,
++        4,
++        5,
++        6,
++        7,
++        8,
++        9,
++        10,
++        11,
++        12,
++        13,
++        14,
++        15,
++        18,
++        37,
++        38,
++        51,
++        104,
++        105,
++        106,
++        107,
++        108,
++        109,
++        110
+       ],
+       "chest": 6,
+       "chest_attach": 11,
+       "readable": [
+-        0, 2, 3, 5, 6, 7, 8, 18, 21, 22, 23, 24, 49, 50, 52, 54,
+-        55, 56, 72, 74, 75, 76, 92, 93, 94, 98, 99, 100, 104, 106, 108, 110
++        0,
++        2,
++        3,
++        5,
++        6,
++        7,
++        8,
++        18,
++        21,
++        22,
++        23,
++        24,
++        49,
++        50,
++        52,
++        54,
++        55,
++        56,
++        72,
++        74,
++        75,
++        76,
++        92,
++        93,
++        94,
++        98,
++        99,
++        100,
++        104,
++        106,
++        108,
++        110
+       ]
+     }
+   },
+@@ -3934,6 +4233,24 @@
+   },
+   "fields": [
+     {
++      "name": "omni.rift.menu_style",
++      "type": "u8",
++      "address": {
++        "pal": "0x000B0041",
++        "ntsc": "0x000B0041"
++      },
++      "about": "Local PC UI skin request. Zero restores original; one themes native menu presentation only."
++    },
++    {
++      "name": "omni.rift.shoulder_walk",
++      "type": "u8",
++      "address": {
++        "pal": "0x000B0040",
++        "ntsc": "0x000B0040"
++      },
++      "about": "Local PC extension: 1 requests native shoulder framing while not aiming, 0 restores the orbit. Does not change aim input, facing or weapon behaviour. Fresh RAM defaults to 0."
++    },
++    {
+       "name": "hero.position.x",
+       "type": "f32",
+       "base": "hero",
+--- a/rac-rs/src/frontend.rs
++++ b/rac-rs/src/frontend.rs
+@@ -111,7 +111,7 @@
+ const SELECTED: [f32; 4] = [1.0, 1.0, 0x20 as f32 / 255.0, 1.0];
+ /// Panel fill 0x80100808. The game frames it with sprites fx 0x19..0x1c; `draw_frame` instead
+ /// paints a capture-matched gold band and fill [I], the real sprite frame is not used [P].
+-/// Frame underlay slot meaning "no HUD sprite" (title level): a flat PANEL fill instead [P].
++/// Frame underlay slot meaning "no HUD sprite" (title level): a flat crate::retail::rift_ui::colour(PANEL) fill instead [P].
+ pub const NO_UNDERLAY: usize = usize::MAX;
+ const PANEL: [f32; 4] = [8.0 / 255.0, 8.0 / 255.0, 16.0 / 255.0, 0.8];
+ /// FUN_00223928 OV 0x223af8: the 0x1c scanline sprite's vertex colour 0x50606060 (RGB 0x60, A 0x50, 0x80 = 1).
+@@ -1059,11 +1059,18 @@
+ 	fn draw_frame(&self, out: &mut Vec<Quad>, f: &[(usize, f32, f32); 4], r: [f32; 4], k: f32, ox: f32, slot: usize) {
+ 		let [x, y, w, h] = r;
+ 		let dest = |x: f32, y: f32, w: f32, h: f32| [ox + x * k, y * k, w.max(0.0) * k, h.max(0.0) * k];
++		if crate::retail::rift_ui::on() {
++            crate::overlay::rect(out, dest(x,y,w,h), [0.027,0.075,0.129,0.97]);
++            crate::overlay::rect(out, dest(x,y,1.5,h), [0.298,0.906,1.0,1.0]);
++            crate::overlay::rect(out, dest(x+1.5,y,w-1.5,0.7), [0.18,0.37,0.46,1.0]);
++            crate::overlay::rect(out, dest(x+1.5,y+h-0.7,w-1.5,0.7), [0.737,0.549,1.0,0.85]);
++            return;
++        }
+ 		let white = [1.0, 1.0, 1.0, 1.0];
+ 		// Retail look from PCSX2 captures [I]: near-black navy fill, faint scanlines, a gold edge band
+ 		// (dark-bright-dark) straddling the rect; the fx 0x19/0x1c sprites decode with zero alpha, so the
+ 		// band stands in for them [P] (decomp/notes/title_assets.md Port status).
+-		crate::overlay::rect(out, dest(x, y, w, h), PANEL_FILL);
++		crate::overlay::rect(out, dest(x, y, w, h), crate::retail::rift_ui::colour(PANEL_FILL));
+ 		// The underlay 0xe99e frame 7 (black RGB, alpha vignette) stretched over the rect, alpha 0x80.
+ 		if f[0].0 != NO_UNDERLAY {
+ 			out.push(Quad { tex: f[0].0, rect: dest(x, y, w, h), uv: [0.0, 0.0, 1.0, 1.0], colour: white, angle: 0.0, corners: None });
+@@ -1076,7 +1083,7 @@
+ 			out.push(Quad { tex: f[1].0, rect: dest(x, y, w, h), uv: [o[0] / tw, o[1] / th, (o[0] + w) / tw, (o[1] + h) / th], colour: [1.0, 1.0, 1.0, -a], angle: 0.0, corners: None });
+ 		}
+ 		out.push(Quad { tex: f[2].0, rect: dest(x, y, w, h), uv: [0.0, 0.0, w / f[2].1, 1.5 * h / f[2].2], colour: SCANLINE_TINT, angle: 0.0, corners: None });
+-		for (inset, t, c) in [(-2.0, 5.0, GOLD_DARK), (-1.0, 3.0, GOLD), (-0.5, 1.0, GOLD_HI)] {
++		for (inset, t, c) in [(-2.0, 5.0, crate::retail::rift_ui::colour(GOLD_DARK)), (-1.0, 3.0, crate::retail::rift_ui::colour(GOLD)), (-0.5, 1.0, crate::retail::rift_ui::colour(GOLD_HI))] {
+ 			let mut e = |x0: f32, y0: f32, ww: f32, hh: f32| crate::overlay::rect(out, dest(x0, y0, ww, hh), c);
+ 			e(x + inset, y + inset, w - 2.0 * inset, t);
+ 			e(x + inset, y + h - inset - t, w - 2.0 * inset, t);
+@@ -1154,7 +1161,7 @@
+ 			crate::overlay::rect(out, [ox + (cx + 2.0) * k, (cy + 2.0) * k, (cw - 3.0).max(0.0) * k, (ch - 3.0).max(0.0) * k], [16.0 / 255.0, 8.0 / 255.0, 8.0 / 255.0, 1.0]);
+ 			match art.frame {
+ 				Some(f) => self.draw_frame(out, &f, [cx, cy, cw, ch], k, ox, i),
+-				None => crate::overlay::rect(out, [ox + cx * k, cy * k, (cw - 1.0).max(0.0) * k, (ch - 1.0).max(0.0) * k], PANEL),
++				None => crate::overlay::rect(out, [ox + cx * k, cy * k, (cw - 1.0).max(0.0) * k, (ch - 1.0).max(0.0) * k], crate::retail::rift_ui::colour(PANEL)),
+ 			}
+ 		}
+ 		if grow < 1.0 {
+@@ -1162,7 +1169,7 @@
+ 		}
+ 		if let (Some(hd), Some(r)) = (&header, lay.title) {
+ 			// Headers are lavender like unselected rows (retail capture) [I].
+-			crate::frontend_lines::fit_header(out, &art.font, hd, [r[0] + 6.0, r[1] + 4.0, r[2] - 12.0, r[3] - 8.0], k, ox, UNSELECTED, self.page == Page::Graphics && hd.contains('\x01'));
++			crate::frontend_lines::fit_header(out, &art.font, hd, [r[0] + 6.0, r[1] + 4.0, r[2] - 12.0, r[3] - 8.0], k, ox, crate::retail::rift_ui::colour(UNSELECTED), self.page == Page::Graphics && hd.contains('\x01'));
+ 		}
+ 		let colour = |i: usize, enabled: bool| -> [f32; 4] {
+ 			if !enabled {
+@@ -1170,7 +1177,7 @@
+ 				return if i == self.sel { [0x60 as f32 / 255.0, 0x60 as f32 / 255.0, 0.0, 1.0] } else { [0x30 as f32 / 255.0, 0x30 as f32 / 255.0, 0x30 as f32 / 255.0, 1.0] };
+ 			}
+ 			let g = self.glow.get(i).copied().unwrap_or(0.0);
+-			std::array::from_fn(|j| UNSELECTED[j] + (SELECTED[j] - UNSELECTED[j]) * g)
++			std::array::from_fn(|j| crate::retail::rift_ui::colour(UNSELECTED)[j] + (crate::retail::rift_ui::colour(SELECTED)[j] - crate::retail::rift_ui::colour(UNSELECTED)[j]) * g)
+ 		};
+ 		match &lay.rows {
+ 			Rows::Each(rects) => {
+@@ -1235,7 +1242,7 @@
+ 					let x1 = hw + 8.0 + ((pw - (hw + 74.0)) * v as f32 / 1024.0).floor();
+ 					match art.vol[i] {
+ 						Some((slot, tw, th)) => out.push(Quad { tex: slot, rect: px(hw + 9.0, y - 6.0, x1, y + 5.0), uv: [0.0, 11.0 / th, (31.0 / tw).min(1.0), (21.0 / th).min(1.0)], colour: [1.0, 1.0, 1.0, 1.0], angle: 0.0, corners: None }),
+-						None => crate::overlay::rect(out, px(hw + 9.0, y - 6.0, x1, y + 5.0), [UNSELECTED[0], UNSELECTED[1], UNSELECTED[2], 1.0]),
++						None => crate::overlay::rect(out, px(hw + 9.0, y - 6.0, x1, y + 5.0), [crate::retail::rift_ui::colour(UNSELECTED)[0], crate::retail::rift_ui::colour(UNSELECTED)[1], crate::retail::rift_ui::colour(UNSELECTED)[2], 1.0]),
+ 					}
+ 				}
+ 			}
+@@ -1266,7 +1273,7 @@
+ 				if let Some((_, name, ammo)) = cur.and_then(|c| ws.get(c)) {
+ 					let ammo = ammo.map_or_else(|| text.get(NO_AMMO).to_string(), |(n, m)| format!("{n}/{m}"));
+ 					for (s, r) in [(name.as_str(), lay.panels[4]), (ammo.as_str(), lay.panels[6])] {
+-						fit_text(out, &art.font, s, [r[0] + 8.0, r[1] + 4.0, r[2] - 16.0, r[3] - 8.0], k, ox, UNSELECTED);
++						fit_text(out, &art.font, s, [r[0] + 8.0, r[1] + 4.0, r[2] - 16.0, r[3] - 8.0], k, ox, crate::retail::rift_ui::colour(UNSELECTED));
+ 					}
+ 				}
+ 				legend(out, &art.font, &[text.get(EQUIP), text.get(EXIT)], lay.panels[7], k, ox);
+@@ -1276,7 +1283,7 @@
+ 			}
+ 			Page::Gadgets => {
+ 				for (&id, (r, _)) in GADGET_LISTS.iter().zip(GADGET_PANELS) {
+-					fit_text(out, &art.font, text.get(id), [r[0] + 3.0, r[1] + 4.0, r[2] - 6.0, r[3] - 8.0], k, ox, UNSELECTED);
++					fit_text(out, &art.font, text.get(id), [r[0] + 3.0, r[1] + 4.0, r[2] - 6.0, r[3] - 8.0], k, ox, crate::retail::rift_ui::colour(UNSELECTED));
+ 				}
+ 				for (i, &(rows, cols, cells, worn_frame)) in GADGET_GRIDS.iter().enumerate() {
+ 					let r = GADGET_PANELS[i].1;
+@@ -1290,7 +1297,7 @@
+ 				let id = GADGET_GRIDS[i].2[self.cell[i].min(GADGET_GRIDS[i].2.len() - 1)];
+ 				if let Some((_, name)) = self.ingame.wear[i].0.iter().find(|o| o.0 == id) {
+ 					let r = lay.panels[2];
+-					fit_text(out, &art.font, name, [r[0] + 8.0, r[1] + 4.0, r[2] - 16.0, r[3] - 8.0], k, ox, UNSELECTED);
++					fit_text(out, &art.font, name, [r[0] + 8.0, r[1] + 4.0, r[2] - 16.0, r[3] - 8.0], k, ox, crate::retail::rift_ui::colour(UNSELECTED));
+ 				}
+ 				legend(out, &art.font, &[text.get(EQUIP), text.get(EXIT)], lay.panels[4], k, ox);
+ 			}
+@@ -1309,15 +1316,15 @@
+ 						out.push(Quad { tex: slot, rect: [ox + ix * k, iy * k, s * k, s * k], uv: [0.0, 0.0, 1.0, 1.0], colour: [1.0; 4], angle: 0.0, corners: None });
+ 					}
+ 					if i == self.sel.min(8) {
+-						outline(out, [ix - 3.0, iy - 3.0, s + 6.0, s + 6.0], 2.0, SEL_EDGE, k, ox);
++						outline(out, [ix - 3.0, iy - 3.0, s + 6.0, s + 6.0], 2.0, crate::retail::rift_ui::colour(SEL_EDGE), k, ox);
+ 					}
+ 				}
+ 				if let Some(Some((name, desc))) = self.ingame.items.get(self.sel.min(8)) {
+ 					let r = lay.panels[6];
+-					fit_text(out, &art.font, name, [r[0] + 6.0, r[1] + 4.0, r[2] - 12.0, r[3] - 8.0], k, ox, UNSELECTED);
++					fit_text(out, &art.font, name, [r[0] + 6.0, r[1] + 4.0, r[2] - 12.0, r[3] - 8.0], k, ox, crate::retail::rift_ui::colour(UNSELECTED));
+ 					let r = lay.panels[4];
+ 					for (j, l) in crate::help::wrap(&art.font, desc, r[2] - 16.0).iter().enumerate().take(((r[3] - 8.0) / 16.0) as usize) {
+-						left_text(out, &art.font, l, r[0] + 8.0, r[1] + 4.0 + j as f32 * 16.0, 16.0, r[2] - 16.0, UNSELECTED, k, ox);
++						left_text(out, &art.font, l, r[0] + 8.0, r[1] + 4.0 + j as f32 * 16.0, 16.0, r[2] - 16.0, crate::retail::rift_ui::colour(UNSELECTED), k, ox);
+ 					}
+ 				}
+ 				let r = lay.panels[2];
+@@ -1325,15 +1332,15 @@
+ 				let lines = crate::help::wrap(&art.font, &gold, 80.0);
+ 				for (i, l) in lines.iter().enumerate() {
+ 					let y = r[1] + r[3] / 2.0 - 8.0 * lines.len() as f32 + 16.0 * i as f32;
+-					fit_text(out, &art.font, l, [r[0] + 14.0, y, 80.0, 16.0], k, ox, GOLD_TEXT);
++					fit_text(out, &art.font, l, [r[0] + 14.0, y, 80.0, 16.0], k, ox, crate::retail::rift_ui::colour(GOLD_TEXT));
+ 				}
+ 				let (found, used) = self.ingame.gold;
+ 				for (i, (&id, n)) in GOLD_STATS.iter().zip([found, used, found.saturating_sub(used)]).enumerate() {
+ 					let y = r[1] + 14.0 + i as f32 * 27.0;
+ 					let label = text.get(id);
+ 					let tw = crate::help::width(&art.font, label).min(110.0);
+-					fit_text(out, &art.font, label, [r[0] + 205.0 - tw, y, tw, 16.0], k, ox, UNSELECTED);
+-					fit_text(out, &art.font, &n.to_string(), [r[0] + 212.0, y, 30.0, 16.0], k, ox, UNSELECTED);
++					fit_text(out, &art.font, label, [r[0] + 205.0 - tw, y, tw, 16.0], k, ox, crate::retail::rift_ui::colour(UNSELECTED));
++					fit_text(out, &art.font, &n.to_string(), [r[0] + 212.0, y, 30.0, 16.0], k, ox, crate::retail::rift_ui::colour(UNSELECTED));
+ 				}
+ 				let c = [92.0 / 255.0, 108.0 / 255.0, 170.0 / 255.0, 1.0];
+ 				crate::overlay::rect(out, [ox + (r[0] + 210.0) * k, (r[1] + 63.0) * k, 34.0 * k, 2.0 * k], c);
+@@ -1347,7 +1354,7 @@
+ 					let r = lay.panels[1];
+ 					for (i, l) in crate::help::wrap(&art.font, &plain(text.get(id)), r[2] - 12.0).iter().enumerate().take(8) {
+ 						let tw = crate::help::width(&art.font, l);
+-						fit_text(out, &art.font, l, [r[0] + 6.0, r[1] + 6.0 + i as f32 * 17.0, tw, 16.0], k, ox, UNSELECTED);
++						fit_text(out, &art.font, l, [r[0] + 6.0, r[1] + 6.0 + i as f32 * 17.0, tw, 16.0], k, ox, crate::retail::rift_ui::colour(UNSELECTED));
+ 					}
+ 				}
+ 				legend(out, &art.font, &[text.get(SELECT), text.get(EXIT)], lay.panels[4], k, ox);
+@@ -1377,7 +1384,7 @@
+ 						out.push(Quad { tex, rect: [ox + (cx + 3.0) * k, (cy + 3.0) * k, (CELL[0] - 6.0) * k, (CELL[1] - 6.0) * k], uv: [0.0, 0.0, 1.0, 1.0], colour: [1.0; 4], angle: 0.0, corners: None });
+ 					}
+ 					if i == self.sel {
+-						outline(out, [cx + 1.0, cy + 1.0, CELL[0] - 2.0, CELL[1] - 2.0], 2.0, SEL_EDGE, k, ox);
++						outline(out, [cx + 1.0, cy + 1.0, CELL[0] - 2.0, CELL[1] - 2.0], 2.0, crate::retail::rift_ui::colour(SEL_EDGE), k, ox);
+ 					}
+ 				}
+ 				if let Some((_, cell)) = self.gadget_entry() {
+@@ -1406,11 +1413,11 @@
+ 			// the button legend (retail capture) [I].
+ 			Page::Map => {
+ 				let r = lay.panels[0];
+-				fit_text(out, &art.font, &self.ingame.area, [r[0] + 8.0, r[1] + 4.0, r[2] - 16.0, r[3] - 8.0], k, ox, UNSELECTED);
++				fit_text(out, &art.font, &self.ingame.area, [r[0] + 8.0, r[1] + 4.0, r[2] - 16.0, r[3] - 8.0], k, ox, crate::retail::rift_ui::colour(UNSELECTED));
+ 				let g = lay.panels[3];
+ 				match art.pics.globe {
+ 					Some(layers) => globe(out, layers, art.pics.globe_inset, art.pics.globe_planet, g, (self.page_time * 50.0) as u32, k, ox),
+-					None => fit_text(out, &art.font, &self.ingame.planet, [g[0] + 10.0, g[1] + g[3] / 2.0 - 10.0, g[2] - 20.0, 20.0], k, ox, SELECTED),
++					None => fit_text(out, &art.font, &self.ingame.planet, [g[0] + 10.0, g[1] + g[3] / 2.0 - 10.0, g[2] - 20.0, 20.0], k, ox, crate::retail::rift_ui::colour(SELECTED)),
+ 				}
+ 				let rows: Vec<String> = [VIEW_MISSIONS, PLAY_INFOBOT, PREV_MAP, NEXT_MAP, TRACK_ZOOM, EXIT].iter().map(|&id| plain(text.get(id))).collect();
+ 				let rows: Vec<&str> = rows.iter().map(String::as_str).collect();
+@@ -1425,7 +1432,7 @@
+ 				let top = r[1] + ((r[3] - lines.len() as f32 * 16.0) / 2.0).max(4.0);
+ 				for (i, l) in lines.iter().enumerate() {
+ 					let tw = crate::help::width(&art.font, l).min(r[2] - 16.0);
+-					fit_text(out, &art.font, l, [r[0] + (r[2] - tw) / 2.0, top + i as f32 * 16.0, tw, 16.0], k, ox, UNSELECTED);
++					fit_text(out, &art.font, l, [r[0] + (r[2] - tw) / 2.0, top + i as f32 * 16.0, tw, 16.0], k, ox, crate::retail::rift_ui::colour(UNSELECTED));
+ 				}
+ 				legend(out, &art.font, &[text.get(YES), text.get(NO)], lay.panels[3], k, ox);
+ 				let rows = self.slot_rows(text, true);
+@@ -1448,14 +1455,14 @@
+ 				let lines = crate::help::wrap(&art.font, body, r[2] - 16.0);
+ 				let lh = ((r[1] + r[3] - 40.0 - top) / lines.len().max(1) as f32).min(16.0);
+ 				for (i, l) in lines.iter().enumerate() {
+-					fit_text(out, &art.font, l, [r[0] + 8.0, top + i as f32 * lh, r[2] - 16.0, lh], k, ox, UNSELECTED);
++					fit_text(out, &art.font, l, [r[0] + 8.0, top + i as f32 * lh, r[2] - 16.0, lh], k, ox, crate::retail::rift_ui::colour(UNSELECTED));
+ 				}
+ 				// Circle = Yes, Triangle = No (0x27bda0 / 0x27f098); the overwrite page draws no Yes/No
+ 				// itself (ingame_menu_leftovers.md P1-e), shown here like Quit [P].
+ 				let y = r[1] + r[3] - 30.0;
+ 				let named = |id| crate::retail::prompts::for_text(text.get(id));
+-				fit_text(out, &art.font, &named(NO), [r[0] + 8.0, y, r[2] / 2.0 - 12.0, 20.0], k, ox, UNSELECTED);
+-				fit_text(out, &art.font, &named(YES), [r[0] + r[2] / 2.0 + 4.0, y, r[2] / 2.0 - 12.0, 20.0], k, ox, UNSELECTED);
++				fit_text(out, &art.font, &named(NO), [r[0] + 8.0, y, r[2] / 2.0 - 12.0, 20.0], k, ox, crate::retail::rift_ui::colour(UNSELECTED));
++				fit_text(out, &art.font, &named(YES), [r[0] + r[2] / 2.0 + 4.0, y, r[2] / 2.0 - 12.0, 20.0], k, ox, crate::retail::rift_ui::colour(UNSELECTED));
+ 				if self.page == Page::Overwrite {
+ 					for (i, rr) in slot_rects(SLOT_STRIP, crate::save::SLOTS).iter().enumerate() {
+ 						let label = self.slot_rows(text, true)[i].0.clone();
+@@ -1478,7 +1485,7 @@
+ 		let lines = crate::help::wrap(&art.font, body, 360.0);
+ 		let hgt = lines.len() as f32 * 16.0 + 24.0;
+ 		let top = 224.0 - hgt / 2.0;
+-		crate::overlay::rect(out, [ox + 66.0 * k, top * k, 380.0 * k, hgt * k], [PANEL[0], PANEL[1], PANEL[2], 0.95]);
++		crate::overlay::rect(out, [ox + 66.0 * k, top * k, 380.0 * k, hgt * k], [crate::retail::rift_ui::colour(PANEL)[0], crate::retail::rift_ui::colour(PANEL)[1], crate::retail::rift_ui::colour(PANEL)[2], 0.95]);
+ 		for (i, l) in lines.iter().enumerate() {
+ 			fit_text(out, &art.font, l, [76.0, top + 12.0 + i as f32 * 16.0, 360.0, 16.0], k, ox, [0.80313724, 0.80313724, 0.80313724, 1.0]);
+ 		}
+@@ -1648,13 +1655,13 @@
+ 			let tw = crate::help::width(&art.font, s);
+ 			fit_text(out, &art.font, s, [cx - tw / 2.0, y, tw, 16.0], k, ox, colour);
+ 		};
+-		let tc = [UNSELECTED[0], UNSELECTED[1], UNSELECTED[2], fade_in];
++		let tc = [crate::retail::rift_ui::colour(UNSELECTED)[0], crate::retail::rift_ui::colour(UNSELECTED)[1], crate::retail::rift_ui::colour(UNSELECTED)[2], fade_in];
+ 		for (i, l) in lines.iter().enumerate() {
+ 			line(out, l, 256.0, text_y + i as f32 * 16.0, tc);
+ 		}
+ 		// Kind 3's hints fade in on their own timer after the box's first 30 ticks; kind 6's with the panel.
+ 		let hint_a = if d.kind == 6 { fade_in } else { (1.0 - d.hint_t as f32 / FADE).clamp(0.0, 1.0) };
+-		let hc = [SELECTED[0], SELECTED[1], SELECTED[2], hint_a];
++		let hc = [crate::retail::rift_ui::colour(SELECTED)[0], crate::retail::rift_ui::colour(SELECTED)[1], crate::retail::rift_ui::colour(SELECTED)[2], hint_a];
+ 		for (id, x) in [(s.yes, 202.0), (s.no, 309.0), (s.hint, 256.0)] {
+ 			if id != 0 {
+ 				line(out, &crate::retail::prompts::for_text(text.get(id)), x, hint_y, hc);
+@@ -1701,7 +1708,7 @@
+ 		for (j, &p) in t.planets.iter().enumerate().skip(first).take(rows) {
+ 			let y = l[1] + 4.0 + (j - first) as f32 * 34.0;
+ 			let g = if j == m.sel { 0.5 + 0.5 * (frames * 0.1).sin() } else { 0.0 };
+-			let c: [f32; 4] = std::array::from_fn(|i| UNSELECTED[i] + (SELECTED[i] - UNSELECTED[i]) * g);
++			let c: [f32; 4] = std::array::from_fn(|i| crate::retail::rift_ui::colour(UNSELECTED)[i] + (crate::retail::rift_ui::colour(SELECTED)[i] - crate::retail::rift_ui::colour(UNSELECTED)[i]) * g);
+ 			left_text(out, &art.font, &plain(text.get(LOCATION + p as u32)), l[0] + 4.0, y, 13.0, l[2] - 8.0, c, k, ox);
+ 			left_text(out, &art.font, &plain(text.get(PLANET + p as u32)), l[0] + 20.0, y + 15.0, 13.0, l[2] - 24.0, c, k, ox);
+ 		}
+@@ -1750,12 +1757,12 @@
+ 			}
+ 			let name = plain(text.get(PLANET + planet as u32));
+ 			let w = crate::help::width(&art.font, &name).min(120.0);
+-			left_text(out, &art.font, &name, if dx < 0.0 { ex - w } else { ex }, ey - 8.0, 16.0, 120.0, UNSELECTED, k, ox);
++			left_text(out, &art.font, &name, if dx < 0.0 { ex - w } else { ex }, ey - 8.0, 16.0, 120.0, crate::retail::rift_ui::colour(UNSELECTED), k, ox);
+ 		}
+ 	} else {
+ 		// Title items (flags 0x4b / 0x24b): the area name right, the planet name left, header colour.
+ 		for (r, base) in [(lay.panels[0], LOCATION), (lay.panels[1], PLANET)] {
+-			fit_text(out, &art.font, &plain(text.get(base + planet as u32)), [r[0] + 6.0, r[1] + 4.0, r[2] - 12.0, r[3] - 8.0], k, ox, UNSELECTED);
++			fit_text(out, &art.font, &plain(text.get(base + planet as u32)), [r[0] + 6.0, r[1] + 4.0, r[2] - 12.0, r[3] - 8.0], k, ox, crate::retail::rift_ui::colour(UNSELECTED));
+ 		}
+ 		if let Some(c) = t.missions.get(planet) {
+ 			checklist(out, art, text, c, lay.panels[2], k, ox);
+@@ -1771,7 +1778,7 @@
+ 		let found = t.gold.get(planet).copied().unwrap_or(0);
+ 		let s = format!("{} {found} {} {}", plain(text.get(FOUND)), plain(text.get(OF)), GOLD_TOTALS.get(planet).copied().unwrap_or(0));
+ 		let w = crate::help::width(&art.font, &s).min(r[2] - 16.0);
+-		left_text(out, &art.font, &s, r[0] + r[2] - 16.0 - w, r[1] + (r[3] - 16.0) / 2.0, 16.0, r[2] - 16.0, UNSELECTED, k, ox);
++		left_text(out, &art.font, &s, r[0] + r[2] - 16.0 - w, r[1] + (r[3] - 16.0) / 2.0, 16.0, r[2] - 16.0, crate::retail::rift_ui::colour(UNSELECTED), k, ox);
+ 		let rows = [EXIT, INFOBOT, BLAST_OFF].map(|id| plain(text.get(id)));
+ 		let rows: Vec<&str> = rows.iter().map(String::as_str).collect();
+ 		return legend(out, &art.font, &rows, lay.panels[5], k, ox);
+@@ -1803,19 +1810,19 @@
+ /// lines, else y + 10): 11x11 frame in 0x80ffa888, 9x9 fill, and the tick 0xe99e frame 1 (30x30 at
+ /// (-13, -18)) when complete; 'All Missions Complete' centred 8 px below the rows (missions.rs).
+ fn checklist(out: &mut Vec<Quad>, art: &Art, text: &Text, (rows, all): &(Vec<(u32, bool)>, bool), r: [f32; 4], k: f32, ox: f32) {
+-	left_text(out, &art.font, &plain(text.get(MISSIONS_HEAD)), r[0] + 4.0, r[1] + 4.0, 16.0, r[2] - 8.0, UNSELECTED, k, ox);
++	left_text(out, &art.font, &plain(text.get(MISSIONS_HEAD)), r[0] + 4.0, r[1] + 4.0, 16.0, r[2] - 8.0, crate::retail::rift_ui::colour(UNSELECTED), k, ox);
+ 	let mut y = 24.0;
+ 	for (i, &(id, done)) in rows.iter().enumerate() {
+ 		let lines = crate::help::wrap(&art.font, &plain(text.get(id)), r[2] - 20.0);
+ 		if y + 16.0 * lines.len() as f32 > r[3] {
+ 			break;
+ 		}
+-		let c = if i == 0 { SELECTED } else { UNSELECTED };
++		let c = if i == 0 { crate::retail::rift_ui::colour(SELECTED) } else { crate::retail::rift_ui::colour(UNSELECTED) };
+ 		for (j, s) in lines.iter().enumerate() {
+ 			left_text(out, &art.font, s, r[0] + 16.0, r[1] + y + 16.0 * j as f32, 16.0, r[2] - 20.0, c, k, ox);
+ 		}
+ 		let cy = r[1] + y + if lines.len() == 2 { 16.0 } else { 10.0 };
+-		crate::overlay::rect(out, [ox + (r[0] + 4.0) * k, (cy - 5.0) * k, 11.0 * k, 11.0 * k], UNSELECTED);
++		crate::overlay::rect(out, [ox + (r[0] + 4.0) * k, (cy - 5.0) * k, 11.0 * k, 11.0 * k], crate::retail::rift_ui::colour(UNSELECTED));
+ 		crate::overlay::rect(out, [ox + (r[0] + 5.0) * k, (cy - 4.0) * k, 9.0 * k, 9.0 * k], [0.0, 0.0, 0.0, 1.0]);
+ 		if let (true, Some((s, _, _))) = (done, art.pics.tick) {
+ 			out.push(Quad { tex: s, rect: [ox + (r[0] - 4.0) * k, (cy - 18.0) * k, 30.0 * k, 30.0 * k], uv: [0.0, 0.0, 1.0, 1.0], colour: [1.0; 4], angle: 0.0, corners: None });
+@@ -1823,7 +1830,7 @@
+ 		y += 16.0 * lines.len() as f32;
+ 	}
+ 	if *all {
+-		fit_text(out, &art.font, &plain(text.get(ALL_DONE)), [r[0] + 4.0, r[1] + y + 8.0, r[2] - 8.0, 16.0], k, ox, SELECTED);
++		fit_text(out, &art.font, &plain(text.get(ALL_DONE)), [r[0] + 4.0, r[1] + y + 8.0, r[2] - 8.0, 16.0], k, ox, crate::retail::rift_ui::colour(SELECTED));
+ 	}
+ }
+ 
+@@ -1845,7 +1852,7 @@
+ 	let x = r[0] + (r[2] - wmax * scale) / 2.0;
+ 	let top = r[1] + (r[3] - lh * rows.len() as f32) / 2.0;
+ 	for (i, (s, w)) in rows.iter().zip(widths).enumerate() {
+-		fit_text(out, font, s, [x, top + i as f32 * lh + (lh - 16.0 * scale) / 2.0, w * scale, 16.0 * scale], k, ox, UNSELECTED);
++		fit_text(out, font, s, [x, top + i as f32 * lh + (lh - 16.0 * scale) / 2.0, w * scale, 16.0 * scale], k, ox, crate::retail::rift_ui::colour(UNSELECTED));
+ 	}
+ }
+ 
+@@ -1861,7 +1868,7 @@
+ 			out.push(Quad { tex: slot, rect: [ox + (cx + 3.0) * k, (cy + 3.0) * k, (CELL[0] - 6.0) * k, (CELL[1] - 6.0) * k], uv: [0.0, 0.0, 1.0, 1.0], colour: [1.0; 4], angle: 0.0, corners: None });
+ 		}
+ 		if sel == Some(i) {
+-			outline(out, [cx + 1.0, cy + 1.0, CELL[0] - 2.0, CELL[1] - 2.0], 2.0, SEL_EDGE, k, ox);
++			outline(out, [cx + 1.0, cy + 1.0, CELL[0] - 2.0, CELL[1] - 2.0], 2.0, crate::retail::rift_ui::colour(SEL_EDGE), k, ox);
+ 		}
+ 	}
+ }
+@@ -1905,8 +1912,8 @@
+ 		out.push(Quad { tex: slot, rect: [ox + (r[0] + r[2] - 42.0) * k, (r[1] + 7.0) * k, 32.0 * k, 32.0 * k], uv: [1.0, 1.0, 0.0, 0.0], colour: [1.0; 4], angle: 0.0, corners: None });
+ 	}
+ 	// L1/R1 glyph text 0x80ffa888 (FUN_0027e100).
+-	fit_text(out, &art.font, "\u{14}", [r[0] + 40.0, r[1] + 15.0, 20.0, 18.0], k, ox, UNSELECTED);
+-	fit_text(out, &art.font, "\u{15}", [r[0] + r[2] - 60.0, r[1] + 15.0, 20.0, 18.0], k, ox, UNSELECTED);
++	fit_text(out, &art.font, "\u{14}", [r[0] + 40.0, r[1] + 15.0, 20.0, 18.0], k, ox, crate::retail::rift_ui::colour(UNSELECTED));
++	fit_text(out, &art.font, "\u{15}", [r[0] + r[2] - 60.0, r[1] + 15.0, 20.0, 18.0], k, ox, crate::retail::rift_ui::colour(UNSELECTED));
+ }
+ 
+ /// The Galactic Map globe (FUN_0027de30 -> FUN_00250880) in panel g: a 256x256 target stretched square into the
+--- a/rac-rs/src/retail/gscap/draw.rs
++++ b/rac-rs/src/retail/gscap/draw.rs
+@@ -7,6 +7,7 @@
+ 
+ pub(super) mod pmemo;
+ mod fastfill;
++mod rift_skin;
+ mod par_misc;
+ mod prof_coarse;
+ use par_misc::to_rgba;
+@@ -327,6 +328,11 @@
+     }
+ 
+     fn raster(&mut self, st: &St, ty: u32, vs: &[Vtx]) {
++        if self.rift_skin(st, ty, vs) { return; }
++        self.raster_original(st, ty, vs);
++    }
++
++    fn raster_original(&mut self, st: &St, ty: u32, vs: &[Vtx]) {
+         if st.ov && matches!(ty, 3..=6) {
+             let n = if ty == 6 { 2 } else { 3 };
+             let (v, k) = overlay_points(vs, n, st.ofx, st.ofy);
+--- /dev/null
++++ b/rac-rs/src/retail/rift_ui.rs
+@@ -0,0 +1,26 @@
++//! Mod-owned presentation switch. No menu state, bindings or saves are modified.
++use std::sync::atomic::{AtomicBool, Ordering};
++static ON: AtomicBool = AtomicBool::new(false);
++pub fn on() -> bool { ON.load(Ordering::Relaxed) }
++pub fn sync(c: &mut ee_oracle::cpu::Cpu) {
++    ON.store(c.mem.rd32(super::pcext::BASE) == 0x3158_4350 && c.mem.rd8(super::pcext::BASE + 0x41) == 1, Ordering::Relaxed);
++}
++/// Colour roles used by the front-end mirror; original colours survive the U toggle.
++pub fn colour(c: [f32; 4]) -> [f32; 4] {
++    if !on() { return c; }
++    let [r,g,b,a]=c;
++    let rgb = if r > 0.7 && g > 0.65 && b < g * 0.8 { [0.298,0.906,1.0] }
++    else if r > b * 1.1 && g > b * 1.05 && r > 0.15 { [0.16,0.48,0.61] }
++    else if b > r * 1.2 && b > g * 1.1 { [0.59,0.68,0.75] }
++    else { [r,g,b] };
++    [rgb[0],rgb[1],rgb[2],a]
++}
++/// Native text/selection vertex colours (GS scale, alpha unchanged).
++pub fn vertex(c: [u8;4]) -> [u8;4] {
++    let [r,g,b,a]=c;
++    if r >= 100 && g >= 90 && u16::from(b)*5 < u16::from(g)*4 {
++        [76,231,255,a]
++    } else if u16::from(b)*4 > u16::from(r)*5 && b > g && b >= 60 {
++        [150,174,192,a]
++    } else { c }
++}
+--- /dev/null
++++ b/rac-rs/src/retail/gscap/draw/rift_skin.rs
+@@ -0,0 +1,61 @@
++//! Semantic skin of native menu art, before either the CPU or the sharp GPU raster.
++//! Only known menu FX geometry and font sheets are changed. Item pictures, previews,
++//! frozen world uploads, menu state and hit boxes keep their original data.
++use super::*;
++impl Gs {
++    pub(super) fn rift_skin(&mut self, st: &St, ty: u32, vs: &[Vtx]) -> bool {
++        if !crate::retail::rift_ui::on() || vs.is_empty() { return false; }
++        let textured=st.at & 0x10 != 0;
++        let (tw,th)=(1u32 << ((st.tex0>>26)&15).min(10),1u32 << ((st.tex0>>30)&15).min(10));
++        let psm=(st.tex0>>20)&63;
++        let n=if ty==6 {2} else {vs.len().min(3)};
++        let mut uv=[f32::MAX,f32::MIN,f32::MAX,f32::MIN];
++        for v in &vs[..n] {
++            let (u,t)=if st.at&0x100!=0 {(v.u as f32/16.0,v.v as f32/16.0)} else {
++                let q=if v.q==0.0 {1.0} else {v.q}; (v.s/q*tw as f32,v.t/q*th as f32)
++            };
++            uv[0]=uv[0].min(u);uv[1]=uv[1].max(u);uv[2]=uv[2].min(t);uv[3]=uv[3].max(t);
++        }
++        let (du,dv)=(uv[1]-uv[0],uv[3]-uv[2]);
++        // Title/pause atlas FX: tiled scanlines and random noise. Never icon-sized samples.
++        if textured && matches!((tw,th),(16,16)|(32,32)) && (du>tw as f32+2.0 || dv>th as f32+2.0) {
++            return true;
++        }
++        let (w,h)=(vs[..n].iter().map(|v|v.x).max().unwrap()-vs[..n].iter().map(|v|v.x).min().unwrap(),
++            vs[..n].iter().map(|v|v.y).max().unwrap()-vs[..n].iter().map(|v|v.y).min().unwrap());
++        let frame=textured && st.ov && tw==64 && th==64 && du>=60.0 && du<=64.5 && dv>=60.0 && dv<=64.5
++            && (w>70*16 || h>70*16);
++        if frame && ty==6 && vs[0].x<vs[1].x && vs[0].y<vs[1].y {
++            let mut flat=*st;
++            flat.at &= !0x10;
++            flat.alpha=0x44; // (Cs-Cd)*As+Cd: opaque panels, independent of the retail additive FX pass.
++            let mut a=vs[0]; let mut b=vs[1];
++            // The retail bevel is drawn AFTER labels. Its centre is transparent:
++            // never replace it (or the vignette underlay) with an opaque fill.
++            {
++                let (x0,y0,x1,y1)=(a.x,a.y,b.x,b.y);
++                for (x,y,xx,yy,col) in [
++                    (x0,y0,x0.saturating_add(24).min(x1),y1,[76,231,255,128]),
++                    (x0,y0,x1,y0.saturating_add(12).min(y1),[46,94,118,128]),
++                    (x0,y1.saturating_sub(12).max(y0),x1,y1,[188,140,255,128]),
++                ] {
++                    a.x=x;a.y=y;b.x=xx;b.y=yy;a.rgba=col;b.rgba=col;
++                    self.raster_original(&flat,6,&[a,b]);
++                }
++            }
++            return true;
++        }
++        // Text is rendered into 512x128 menu plates as well as directly to screen.
++        // Restrict colour conversion to font sheets and flat selection geometry.
++        if frame || !textured || (tw==256 && th==128 && matches!(psm,0x13|0x14)) {
++            let mut changed=false;
++            let v:Vec<_>=vs.iter().map(|v| {
++                let colour=if frame {[76,231,255,v.rgba[3]]} else {crate::retail::rift_ui::vertex(v.rgba)};
++                changed |= colour!=v.rgba;
++                Vtx { rgba:colour,..*v }
++            }).collect();
++            if changed { self.raster_original(st,ty,&v); return true; }
++        }
++        false
++    }
++}
