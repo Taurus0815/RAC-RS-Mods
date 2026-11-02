@@ -123,8 +123,12 @@ function M.setup(state)
     local native_ready,native_fade=nil,nil
     local guard_api,guard_field=pcall(function() return omni.fields.omni.rift.wheel_draw_guard end)
     guard_api=guard_api and type(guard_field)=="number"
+    -- Older native builds registered gameplay routines by an ambiguous address
+    -- text match. Never enable that guard; retain the fade fallback instead.
     local function native_guard()
-        return guard_api and omni.fields.omni.rift.wheel_draw_guard==1
+        if not guard_api or omni.fields.omni.rift.wheel_draw_guard~=1 then return false end
+        local ok,revision=pcall(function() return omni.fields.omni.rift.wheel_guard_revision end)
+        return ok and type(revision)=="number" and revision>=2
     end
     local function request_guard()
         if guard_api then

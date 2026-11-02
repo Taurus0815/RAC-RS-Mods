@@ -2,7 +2,7 @@
   "format": 2,
   "id": "rift-modern",
   "name": "Rift Modern",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "author": "Taurus0815",
   "description": "Rift-inspired HUD and menus, paused high-resolution weapon-picture wheel, aim + melee wrench throw and responsive shoulder movement.",
   "license": "MIT",

@@ -12,7 +12,7 @@ Direkte ZIP-Downloads / Direct ZIP downloads:
 
 | Paket / Package | Version | Download |
 | --- | --- | --- |
-| Rift Modern | 0.12.0 | [rift-modern-0.12.0.zip](https://github.com/Taurus0815/RAC-RS-Mods/raw/refs/heads/main/downloads/rift-modern-0.12.0.zip) |
+| Rift Modern | 0.12.1 | [rift-modern-0.12.1.zip](https://github.com/Taurus0815/RAC-RS-Mods/raw/refs/heads/main/downloads/rift-modern-0.12.1.zip) |
 | HQ Texture Remake — **beide Teile / both parts** | 2.0.0 | [Teil 1 / Part 1](https://github.com/Taurus0815/RAC-RS-Mods/releases/download/hq-texture-remake-v2.0.0/hq-texture-remake-2.0.0-part01.zip) · [Teil 2 / Part 2](https://github.com/Taurus0815/RAC-RS-Mods/releases/download/hq-texture-remake-v2.0.0/hq-texture-remake-2.0.0-part02.zip) |
 | HQ Texture Remake Lite — Figuren/Waffen / characters/weapons | 1.0.0 | [hq-texture-remake-1.0.0.zip](https://github.com/Taurus0815/RAC-RS-Mods/raw/refs/heads/main/downloads/hq-texture-remake-1.0.0.zip) |
 | Rift Modern: nativer Quellpatch / native source patch | RAC-RS 0.4.3 | [rift-modern-native-patch-0.4.3.zip](https://github.com/Taurus0815/RAC-RS-Mods/raw/refs/heads/main/downloads/rift-modern-native-patch-0.4.3.zip) |
@@ -22,6 +22,8 @@ Direkte ZIP-Downloads / Direct ZIP downloads:
 ## Deutsch
 
 ### Rift Modern
+
+**0.12.1:** Behebt den Stillstand trotz Laufanimation auf Kerwan. Der native Auswahlrad-Patch wurde korrigiert; die Scripts aktivieren keine alten unsicheren Ausblendungsroutinen mehr. / Fixes walking in place on Kerwan. The native wheel patch is corrected; scripts no longer enable unsafe legacy guards.
 
 - Von Rift Apart inspiriertes HUD und Menüdesign mit Cyan- und Violett-Akzenten.
 - Reaktionsschnelleres Laufen, Beschleunigen und Abbremsen mit nativer Kollision.

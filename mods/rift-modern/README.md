@@ -1,8 +1,10 @@
-# Rift Modern 0.12.0
+# Rift Modern 0.12.1
 
 **Ersteller / Author: Taurus0815**
 
 ## Deutsch
+
+**Korrektur 0.12.1:** Behebt Laufen auf der Stelle. Die Ausblendung des alten Auswahlrads darf nur geprüfte Zeichenroutinen überspringen. Ältere native Player verwenden mit diesen Scripts den Fade-Ersatzweg; für den korrigierten nativen Schutz den aktuellen Quellpatch anwenden und neu bauen.
 
 Rift-Apart-inspiriertes HUD, Menüdesign und reaktionsschnellere Steuerung für RAC-RS 0.4.3. Benötigt OmniLoader 0.1.0, Host-ABI 1.6 und Script-API 1.3. Geprüft auf PAL SCES-50916 v1.00.
 
@@ -24,6 +26,8 @@ J schaltet die Bewegungsreaktion um, K das HUD und U die Original-Menüansicht. 
 Die Gesundheitsanzeige verwendet standardmäßig die originale Spielgesundheit. Ein optionaler externer Modus ist für eine separat vorhandene, kompatible Nanotech-HUD-Integration gedacht. Arsenal Mastery wird nicht mitgeliefert. Bereits gespeicherte persönliche Werte bleiben erhalten.
 
 ## English
+
+**Fix in 0.12.1:** Restores walking. Hiding the original wheel may skip only verified drawing routines. These scripts use the fade fallback on older native players; apply the current source patch and rebuild for the corrected native guard.
 
 Rift Apart-inspired HUD, menu styling and more responsive controls for RAC-RS 0.4.3. Requires OmniLoader 0.1.0, host ABI 1.6 and script API 1.3. Checked on PAL SCES-50916 v1.00.
 

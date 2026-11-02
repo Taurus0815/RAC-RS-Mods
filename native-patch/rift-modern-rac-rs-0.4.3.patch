@@ -567,10 +567,20 @@
        ]
      }
    },
-@@ -3934,6 +4233,53 @@
+@@ -3934,6 +4233,63 @@
    },
    "fields": [
      {
++      "name": "omni.rift.wheel_guard_revision",
++      "type": "u8",
++      "readonly": true,
++      "address": {
++        "pal": "0x000B0048",
++        "ntsc": "0x000B0048"
++      },
++      "about": "Render guard revision. Revision 2 admits only exact draw templates; scripts must not enable revision 1 guards."
++    },
++    {
 +      "name": "omni.rift.hide_original_wheel",
 +      "type": "u8",
 +      "address": {
@@ -1163,12 +1173,13 @@
 +}
 --- /dev/null
 +++ b/rac-rs/src/retail/rift_wheel.rs
-@@ -0,0 +1,71 @@
+@@ -0,0 +1,59 @@
 +//! Render-only guard for the retail quick-select wheel. The original update,
 +//! delay, contextual Triangle handling and selection state remain untouched.
-+//! Entries are the two verified shared draw templates (wheel backdrop e934 and
-+//! highlight e99c) on all 19 levels of this PAL v1.00 installation. Hash checks
-+//! keep the original code on any other layout; scripts can then use a fallback.
++//! Only exact generated draw templates t_350/t_353 are registered. Never select
++//! a function by a text match for an address: that also matches HeroUpdateState.
++//! Hash checks and nonempty per-level ranges retain retail on unknown layouts;
++//! scripts use their fade fallback there (currently PAL levels 2 and 14).
 +use ee_oracle::{cpu::Cpu,rec::{Hand,register_hand}};
 +use std::sync::atomic::{AtomicBool,Ordering};
 +const BASE:u32=super::pcext::BASE;
@@ -1177,43 +1188,29 @@
 +static HANDS:&[Hand]=&[
 + Hand{entry:0x237e80,end:0x2386f0,hash:0xb8e544db42612abe,est:0,f:hide}, // level 0
 + Hand{entry:0x238b68,end:0x239190,hash:0x62cbb36bb0852a1b,est:0,f:hide}, // level 0
-+ Hand{entry:0x1ee7d8,end:0x1efb50,hash:0xebd49d81893ca6f9,est:0,f:hide}, // level 0
 + Hand{entry:0x24d4a0,end:0x24dd10,hash:0x61d009421f32afe2,est:0,f:hide}, // level 1
-+ Hand{entry:0x30e848,end:0x30ea10,hash:0x17cb15858228c501,est:0,f:hide}, // level 1
-+ Hand{entry:0x23aac8,end:0x23b338,hash:0x88d04d7b7cfba5c,est:0,f:hide}, // level 2
-+ Hand{entry:0x27e848,end:0x27edc4,hash:0xf6848e9e9ba151bd,est:0,f:hide}, // level 2
-+ Hand{entry:0x2de8b0,end:0x2de9e0,hash:0x30ee72c3fb6b9b01,est:0,f:hide}, // level 2
 + Hand{entry:0x2275d8,end:0x227e48,hash:0xbed90ae3025314a2,est:0,f:hide}, // level 3
-+ Hand{entry:0x21c1d0,end:0x22107c,hash:0x9e8abe36e173b26,est:0,f:hide}, // level 3
 + Hand{entry:0x22b3e0,end:0x22bc50,hash:0x63a534d8433c7302,est:0,f:hide}, // level 4
 + Hand{entry:0x22c0c8,end:0x22c6f0,hash:0x6512ead80a584bcd,est:0,f:hide}, // level 4
 + Hand{entry:0x261200,end:0x261a70,hash:0xe7ab01556e9c2f9c,est:0,f:hide}, // level 5
 + Hand{entry:0x247328,end:0x247b98,hash:0x6c690d6b7cf575e6,est:0,f:hide}, // level 6
 + Hand{entry:0x248010,end:0x248638,hash:0xe6a5380b87ba8ac3,est:0,f:hide}, // level 6
 + Hand{entry:0x260950,end:0x260f78,hash:0x9e172849b740b099,est:0,f:hide}, // level 7
-+ Hand{entry:0x25fc68,end:0x2604d8,hash:0x1bf3030de12e3b5e,est:0,f:hide}, // level 7
-+ Hand{entry:0x30e810,end:0x30ea1c,hash:0xbb677f0253963c07,est:0,f:hide}, // level 7
 + Hand{entry:0x243078,end:0x2438e8,hash:0x6618b8c6ffa13258,est:0,f:hide}, // level 8
-+ Hand{entry:0x2de810,end:0x2dfb54,hash:0xa552c1c0bcbc911d,est:0,f:hide}, // level 8
-+ Hand{entry:0x2e94a0,end:0x2e9cc0,hash:0xb763428a9518cdcd,est:0,f:hide}, // level 8
 + Hand{entry:0x257ae0,end:0x258350,hash:0xfbadefc35e76551e,est:0,f:hide}, // level 9
 + Hand{entry:0x2587c8,end:0x258df0,hash:0x91ad2e3fa52d423b,est:0,f:hide}, // level 9
-+ Hand{entry:0x2371b0,end:0x240b4c,hash:0x4876fc7c4904ad23,est:0,f:hide}, // level 9
 + Hand{entry:0x22b468,end:0x22bcd8,hash:0xccd295382d05e432,est:0,f:hide}, // level 10
 + Hand{entry:0x22c150,end:0x22c778,hash:0xf9eafb25de6f1c5,est:0,f:hide}, // level 10
 + Hand{entry:0x25e838,end:0x25f0a8,hash:0x63eaf406b398a04e,est:0,f:hide}, // level 11
 + Hand{entry:0x251678,end:0x251ee8,hash:0xf53fa7432fb5fa8c,est:0,f:hide}, // level 12
 + Hand{entry:0x2438e8,end:0x244158,hash:0xf9062783192c194e,est:0,f:hide}, // level 13
-+ Hand{entry:0x2445d0,end:0x244bf8,hash:0xa4380ef24f254f59,est:0,f:hide}, // level 13
-+ Hand{entry:0x22da40,end:0x232c80,hash:0x3079553e2c0ce725,est:0,f:hide}, // level 13
-+ Hand{entry:0x2408f0,end:0x241160,hash:0x158a2ff5e32cc26c,est:0,f:hide}, // level 14
 + Hand{entry:0x228a00,end:0x229270,hash:0xed2093001f08667c,est:0,f:hide}, // level 15
 + Hand{entry:0x233890,end:0x234100,hash:0x52136c66382c0ae0,est:0,f:hide}, // level 16
 + Hand{entry:0x2330e8,end:0x233958,hash:0xb5a25bc4431a0a62,est:0,f:hide}, // level 17
 + Hand{entry:0x233dd0,end:0x2343f8,hash:0xad1ea0a90754dc45,est:0,f:hide}, // level 17
 + Hand{entry:0x23b3e8,end:0x23bc58,hash:0xefb8f19eec5856ae,est:0,f:hide}, // level 18
 + ];
-+static RANGES:[(usize,usize);19]=[(0,3),(3,5),(5,8),(8,10),(10,12),(12,13),(13,15),(15,18),(18,21),(21,24),(24,26),(26,27),(27,28),(28,31),(31,32),(32,33),(33,34),(34,36),(36,37)];
++static RANGES:[(usize,usize);19]=[(0,2),(2,3),(3,3),(3,4),(4,6),(6,7),(7,9),(9,10),(10,11),(11,13),(13,15),(15,16),(16,17),(17,18),(18,18),(18,19),(19,20),(20,22),(22,23)];
 +
 +pub fn register() {
 + if std::env::var("ORACLE_HAND").is_ok_and(|v|v=="0") {return;}
@@ -1223,8 +1220,9 @@
 + if c.mem.rd32(BASE)!=0x3158_4350 {return;}
 + if !INIT.swap(true,Ordering::Relaxed) {c.mem.wr32(BASE+0x44,0);}
 + let level=c.mem.rd32(super::disc::va(0x15ed84)) as usize;
-+ let ok=ENABLED.load(Ordering::Relaxed) && RANGES.get(level).is_some_and(|&(a,z)|HANDS[a..z].iter().all(|h|ee_oracle::rec::hash(&c.mem,h.entry,h.end)==h.hash));
++ let ok=ENABLED.load(Ordering::Relaxed) && RANGES.get(level).is_some_and(|&(a,z)|a<z && HANDS[a..z].iter().all(|h|ee_oracle::rec::hash(&c.mem,h.entry,h.end)==h.hash));
 + c.mem.wr8(BASE+0x43,ok as u8);
++ c.mem.wr8(BASE+0x48,2);
 +}
 +fn hide(c:&mut Cpu)->bool {
 + if c.mem.rd32(BASE)!=0x3158_4350 || c.mem.rd8(BASE+0x42)!=1 || c.mem.rd8(0x1413f4)!=0 || c.mem.rd32(super::disc::va(0x15f5a4))!=0 {return false;}
