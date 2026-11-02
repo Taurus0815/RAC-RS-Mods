@@ -15,7 +15,7 @@
  	blend: u32,
  	/// RMB aim mode in force (the camera hand ran live with RMB held), and the last value logged.
  	aiming: bool,
-+	/// Latched shoulder locomotion; never a synthetic weapon-aim input.
++	/// Latched shoulder locomotion with camera-directed firing, separate from physical aim/zoom.
 +	walking: bool,
  	aim_logged: bool,
  	aim_poked: bool,
@@ -82,7 +82,27 @@
  		dyn_follow(st, &fr, piv);
  	} else {
  		let old = st.pivot;
-@@ -1596,6 +1602,12 @@
+@@ -1545,8 +1551,8 @@
+ 		let chk = dbg_chk(c, lv, piv, pivot_r, e);
+ 		let d = &st.dy;
+ 		eprintln!(
+-			"modcam-log f={} dyn={} yaw={:.5} pitch={:.5} out={:.5} bias={:.4} len={:.5} goal={:.4} safe={:.4} piv={:.3},{:.3},{:.3} hero={:.3},{:.3},{:.3} sp={:.2} vz={:.2} idle={} air={} drop={:.2} open={:.2},{:.2},{:.2} lock={} off={:.2},{:.2},{:.2} flen={:.2} aim={} rc={:.2} chk={:.3},{:.3},{:.3} pc={:.3},{:.3},{:.3} eye={:.3},{:.3},{:.3} cl={:.3}",
+-			st.field, dynamic as u8, st.yaw, st.pitch, pitch, d.bias, st.len, goal_len, safe, st.pivot[0], st.pivot[1], st.pivot[2], hero[0], hero[1], hero[2], d.speed, d.vz, d.idle, d.is_air as u8, d.drop_w, d.open_s[0], d.open_s[1], d.open_s[2], d.lock_hold, d.frame_off[0], d.frame_off[1], d.frame_off[2], d.frame_len, st.aiming as u8, d.rc_used, chk[0], chk[1], chk[2], d.pivc[0], d.pivc[1], d.pivc[2], e[0], e[1], e[2], len3(sub(d.pivc, st.pivot))
++			"modcam-log f={} dyn={} yaw={:.5} pitch={:.5} out={:.5} bias={:.4} len={:.5} goal={:.4} safe={:.4} piv={:.3},{:.3},{:.3} hero={:.3},{:.3},{:.3} sp={:.2} vz={:.2} idle={} air={} drop={:.2} open={:.2},{:.2},{:.2} lock={} off={:.2},{:.2},{:.2} flen={:.2} aim={} walk={} held={} zoom={} rc={:.2} chk={:.3},{:.3},{:.3} pc={:.3},{:.3},{:.3} eye={:.3},{:.3},{:.3} cl={:.3}",
++			st.field, dynamic as u8, st.yaw, st.pitch, pitch, d.bias, st.len, goal_len, safe, st.pivot[0], st.pivot[1], st.pivot[2], hero[0], hero[1], hero[2], d.speed, d.vz, d.idle, d.is_air as u8, d.drop_w, d.open_s[0], d.open_s[1], d.open_s[2], d.lock_hold, d.frame_off[0], d.frame_off[1], d.frame_off[2], d.frame_len, st.aiming as u8, st.walking as u8, st.sh.hold_ticks, st.sh.zoom_t, d.rc_used, chk[0], chk[1], chk[2], d.pivc[0], d.pivc[1], d.pivc[2], e[0], e[1], e[2], len3(sub(d.pivc, st.pivot))
+ 		);
+ 	}
+ }
+@@ -1587,7 +1593,7 @@
+ 	IN_ATK.store(false, Ordering::SeqCst);
+ 	ATK_RUNS.fetch_add(1, Ordering::Relaxed);
+ 	let Ok(st) = ST.lock() else { return true };
+-	if classic::drives(&st) && st.aiming && st.live && st.level == lv.level && c.mem.rd32(ATK_TARGET) & 0x01ff_ffff == 0 {
++	if classic::drives(&st) && (st.aiming || st.walking) && st.live && st.level == lv.level && c.mem.rd32(ATK_TARGET) & 0x01ff_ffff == 0 {
+ 		c.mem.wr32(ATK_STICK, 1);
+ 		wf(c, ATK_YAW, wrap(st.yaw));
+ 	}
+@@ -1596,9 +1602,15 @@
  
  /// The camera yaw Ratchet faces while RMB aim is in force (the modern camera drives and aims), else None. strafe.rs reads it
  /// for the flips and the torso twist: modcam's own yaw state, not RAM 0x166ed8, so it is not a field behind.
@@ -94,8 +114,44 @@
 +
  pub fn aim_yaw() -> Option<f32> {
  	let st = ST.lock().ok()?;
- 	(enabled() && classic::drives(&st) && st.aiming && st.live).then(|| wrap(st.yaw))
-@@ -1690,6 +1702,7 @@
+-	(enabled() && classic::drives(&st) && st.aiming && st.live).then(|| wrap(st.yaw))
++	(enabled() && classic::drives(&st) && (st.aiming || st.walking) && st.live).then(|| wrap(st.yaw))
+ }
+ 
+ /// The camera while RMB aim is in force, for aim.rs (crosshair ray): the pose last written (eye, forward = row 0), the pivot
+@@ -1616,7 +1628,7 @@
+ /// None unless `aim_yaw()` is Some (the same state: modern camera driving, RMB held).
+ pub fn aim_cam() -> Option<AimCam> {
+ 	let st = ST.lock().ok()?;
+-	if !(enabled() && classic::drives(&st) && st.aiming && st.live) {
++	if !(enabled() && classic::drives(&st) && (st.aiming || st.walking) && st.live) {
+ 		return None;
+ 	}
+ 	let (eye, yaw, pitch) = st.last;
+@@ -1645,6 +1657,13 @@
+ 
+ /// Worker, before each field: the field's input, the F7 toggle, and the gun aim override while aiming.
+ pub fn pre_field(m: &mut ee_oracle::Machine, fin: &super::FieldIn) {
++	// Scripts must distinguish a physical aim hold from camera-directed hip fire.
++	// In particular, shoulder walking must not trigger the aim+melee throw combo
++	// or prevent the next double tap from switching walking back off.
++	if m.rd32(super::pcext::BASE) == 0x3158_4350 {
++		m.cpu.mem.wr8(super::pcext::BASE + 0x49, fin.mc.aim as u8);
++		m.cpu.mem.wr8(super::pcext::BASE + 0x4a, 1);
++	}
+ 	if !enabled() {
+ 		return;
+ 	}
+@@ -1660,7 +1679,7 @@
+ 			u.on = st.active;
+ 		}
+ 	}
+-	let aiming = classic::drives(&st) && st.aiming && st.live && st.level == m.level() && lv_of(m.level()).is_some() && m.rd32(va(GAME_MODE)) == 0;
++	let aiming = classic::drives(&st) && (st.aiming || st.walking) && st.live && st.level == m.level() && lv_of(m.level()).is_some() && m.rd32(va(GAME_MODE)) == 0;
+ 	if aiming {
+ 		// Retail's manual-aim override: the gun updaters read 0x14060c instead of the hero-forward yaw as the shot and
+ 		// target-search direction (their own search and green reticle run on it).
+@@ -1690,6 +1709,7 @@
  		if st.live && st.ran != st.field && class != 0 {
  			st.live = false;
  			st.aiming = false;
@@ -103,7 +159,7 @@
  			eprintln!("retail: modcam hands back to retail: camera class {class} (game mode {}, field {})", m.rd32(va(GAME_MODE)), st.field);
  		}
  	}
-@@ -1761,6 +1774,7 @@
+@@ -1761,6 +1781,7 @@
  		st.active = true;
  		st.live = false;
  		st.aiming = false;
@@ -122,7 +178,39 @@
  /// Room the wanted shift keeps between the shifted pivot and a wall at his side (m).
  const MARGIN: f32 = 0.3;
  /// The shifted pivot keeps this far from a wall the side line meets (m): closer than that the shift is pulled in at `CLAMP_RATE`.
-@@ -177,11 +179,13 @@
+@@ -111,11 +113,14 @@
+ 	side: f32,
+ 	out: bool,
+ 	hold: Hold,
++	/// Physical aim duration and independent zoom blend. Walking never advances either.
++	pub(super) hold_ticks: u32,
++	pub(super) zoom_t: u32,
+ 	pub(super) shift: [f32; 3],
+ }
+ 
+ impl Sh {
+-	pub(super) const ZERO: Sh = Sh { mix: 0.0, side: f32::INFINITY, out: false, hold: Hold::NONE, shift: [0.0; 3] };
++	pub(super) const ZERO: Sh = Sh { mix: 0.0, side: f32::INFINITY, out: false, hold: Hold::NONE, hold_ticks: 0, zoom_t: 0, shift: [0.0; 3] };
+ }
+ 
+ /// The aim ends (hand-back to retail, a seed): no lift, no shift; the next aim starts afresh in the row's mode.
+@@ -158,6 +163,15 @@
+ 	}
+ }
+ 
++/// Match the script's short-tap window (0.25 s rounded to fields). Two taps can
++/// toggle shoulder walking without ever shortening the boom. A sustained hold
++/// starts the separate zoom blend only after that window has elapsed.
++fn next_zoom(held: u32, zoom: u32, aiming: bool, blend: u32, dt: f32) -> (u32, u32) {
++	let held = if aiming { held.saturating_add(1) } else { 0 };
++	let tap_fields = (0.25 / dt.max(1e-3) + 0.5).floor() as u32;
++	(held, next_t(zoom, aiming && held > tap_fields, blend))
++}
++
+ /// The lift in force (the old inline formula of `step`, unchanged): the smoothstep of `aim_t` up to `max`, limited by the ceiling.
+ fn lift_value(max: f32, aim_t: u32, blend: u32, cap: f32) -> f32 {
+ 	let t = (aim_t as f32 / blend as f32).min(1.0);
+@@ -177,11 +191,14 @@
  	if !flat {
  		reset(st);
  	}
@@ -136,9 +224,61 @@
 -	st.aim_t = next_t(st.aim_t, st.aiming, b);
 +	let ((b, cap_step), max) = (raised_params(st.sh.mix, shoulder, dt()), max_lift(st.sh.mix, tune()[2]));
 +	st.aim_t = next_t(st.aim_t, st.aiming || walk, b);
++	(st.sh.hold_ticks, st.sh.zoom_t) = next_zoom(st.sh.hold_ticks, st.sh.zoom_t, st.aiming, b, dt());
  	if st.aim_t > 0 {
  		let up = [st.dy.pivc[0], st.dy.pivc[1], st.dy.pivc[2] + max + AIM_CEIL];
  		let goal = match seg(c, lv, st.dy.pivc, up) {
+@@ -340,7 +357,10 @@
+ 	st.sh.shift = scale3(right, st.sh.side * w);
+ 	st.sh.out = true;
+ 	let frame_len = if dynamic { st.dy.frame_len } else { 0.0 };
+-	(add3(pivot, st.sh.shift), goal(goal_len, frame_len, dist, w))
++	// Shoulder framing also applies while walking. Only a physical aim hold may
++	// shorten the boom; neither walking nor its double-tap uses the framing weight.
++	let zoom = ease_k(st.sh.zoom_t, blend(mix)) * mix;
++	(add3(pivot, st.sh.shift), goal(goal_len, frame_len, dist, zoom))
+ }
+ 
+ /// How far the boom may grow back in a field (m): `RELEASE`, faster after a Shoulder aim until the boom has reached its goal.
+@@ -366,6 +386,38 @@
+ 	const USA_DT: f32 = 1001.0 / 60000.0;
+ 	const REACH: f32 = SIDE + MARGIN + LOOK;
+ 	const NO_LEAD: [f32; 2 * LEAD.len()] = [f32::INFINITY; 2 * LEAD.len()];
++
++	#[test]
++	fn zoom_ignores_double_taps_and_waits_for_a_sustained_hold() {
++		for dt in [0.02f32, 1001.0 / 60000.0] {
++			let tap = (0.25 / dt + 0.5).floor() as u32;
++			let blend = (0.24 / dt).round() as u32;
++			let (mut held, mut zoom) = (0, 0);
++			// Both maximum-length short taps remain entirely outside the zoom.
++			for _ in 0..2 {
++				for _ in 0..tap {
++					(held, zoom) = next_zoom(held, zoom, true, blend, dt);
++					assert_eq!(zoom, 0);
++				}
++				(held, zoom) = next_zoom(held, zoom, false, blend, dt);
++				assert_eq!((held, zoom), (0, 0));
++			}
++			// Shoulder walking after the taps is still unzoomed indefinitely.
++			for _ in 0..180 {
++				(held, zoom) = next_zoom(held, zoom, false, blend, dt);
++				assert_eq!(zoom, 0);
++			}
++			for _ in 0..tap { (held, zoom) = next_zoom(held, zoom, true, blend, dt); }
++			assert_eq!(zoom, 0);
++			(held, zoom) = next_zoom(held, zoom, true, blend, dt);
++			assert_eq!(zoom, 1);
++			for _ in 1..blend { (held, zoom) = next_zoom(held, zoom, true, blend, dt); }
++			assert_eq!(zoom, blend);
++			// Release removes zoom even though the shoulder-walk latch stays on.
++			for _ in 0..blend { (held, zoom) = next_zoom(held, zoom, false, blend, dt); }
++			assert_eq!((held, zoom), (0, 0));
++		}
++	}
+ 
+ 	fn wall(d: f32, hard: bool) -> Option<Contact> {
+ 		Some(Contact { d, hard })
 --- a/rac-rs/src/retail/strafe.rs
 +++ b/rac-rs/src/retail/strafe.rs
 @@ -277,7 +277,7 @@
@@ -567,10 +707,30 @@
        ]
      }
    },
-@@ -3934,6 +4233,63 @@
+@@ -3934,6 +4233,83 @@
    },
    "fields": [
      {
++      "name": "omni.rift.aim_held",
++      "type": "u8",
++      "readonly": true,
++      "address": {
++        "pal": "0x000B0049",
++        "ntsc": "0x000B0049"
++      },
++      "about": "Physical aim action held (controller or mouse), independent of camera-directed shoulder hip fire."
++    },
++    {
++      "name": "omni.rift.camera_revision",
++      "type": "u8",
++      "readonly": true,
++      "address": {
++        "pal": "0x000B004A",
++        "ntsc": "0x000B004A"
++      },
++      "about": "Revision 1 separates physical aim input, shoulder hip fire and held-only zoom."
++    },
++    {
 +      "name": "omni.rift.wheel_guard_revision",
 +      "type": "u8",
 +      "readonly": true,

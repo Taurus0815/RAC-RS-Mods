@@ -1,5 +1,5 @@
 --!nonstrict
--- Rift Modern 0.12.1, matched to RAC-RS 0.4.2/0.4.3 / OmniLoader ABI 1.6.
+-- Rift Modern 0.12.2, matched to RAC-RS 0.4.2/0.4.3 / OmniLoader ABI 1.6.
 assert(omni.has and omni.has("omni.events") and omni.has("omni.draw"), "RAC-RS drawing/events required")
 
 local state = { movement = true, hud = true }
@@ -37,4 +37,4 @@ omni.on_frame(function()
         omni.log("HUD toggle: " .. tostring(state.hud))
     end
 end)
-omni.log("Rift Modern 0.12.1 ready; native collision, jump and launcher camera settings retained")
+omni.log("Rift Modern 0.12.2 ready; native collision, jump and launcher camera settings retained")

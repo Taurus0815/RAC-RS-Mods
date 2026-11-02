@@ -15,8 +15,8 @@ function M.setup(state)
             if omni.setting("aim_wrench_throw") == false or bit32.band(down, 0x80) == 0 then return end
             local base = layout.hero()
             -- The native camera has consumed the physical aim button before on_pad.
-            -- This is the real weapon-aim flag, never the double-tap walking latch.
-            if not base or omni.read("u8", base + 0x20a4) ~= 0 or omni.read("u32", base + 0x12b0) ~= 1 then return end
+            -- The physical aim action stays separate from camera-directed hip fire.
+            if not base or omni.read("u8", base + 0x20a4) ~= 0 or not layout.aim_held(base) then return end
             -- Let the original game perform Comet Strike (R1 + Square), including
             -- its wind-up, release, hit checks and return. Preserve other pressures.
             down = bit32.bor(down, 8)

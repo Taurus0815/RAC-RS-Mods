@@ -15,4 +15,15 @@ function M.hero()
     end
     return nil
 end
+-- New native builds publish the physical aim separately from the manual weapon
+-- aim flag, which also follows the camera during latched shoulder walking.
+function M.aim_held(base)
+    local ok,revision,held=pcall(function()
+        return omni.fields.omni.rift.camera_revision,omni.fields.omni.rift.aim_held
+    end)
+    if ok and type(revision)=="number" and revision>=1 and type(held)=="number" then
+        return held==1
+    end
+    return base~=nil and omni.read("u32",base+0x12b0)==1
+end
 return M

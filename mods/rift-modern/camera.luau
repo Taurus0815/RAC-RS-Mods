@@ -1,6 +1,6 @@
 --!nonstrict
 -- Requests native shoulder framing and camera-relative strafe locomotion.
--- Weapon aiming remains tied to real input; native wall and floor tests stay active.
+-- Camera-directed hip fire stays separate from physical aim/zoom; native wall/floor tests stay active.
 local M={}
 local layout=require("layout")
 function M.setup()
@@ -21,10 +21,10 @@ function M.setup()
         if not allowed then latched=false end
         local base=omni.mode()=="gameplay" and layout.hero() or nil
         if allowed and base and omni.read("u8",base+0x20a4)==0 then
-            -- The native modern camera sets this only while actual aiming is on.
+            -- Native physical input is separate from the weapon-facing override.
             -- It covers both the controller aim action and right mouse button,
             -- without synthesizing input or relying on a physical button binding.
-            local aiming=omni.read("u32",base+0x12b0)==1
+            local aiming=layout.aim_held(base)
             if first_tap and tick-first_tap>gap_ticks then first_tap=nil end
             if aiming and not was_aiming then
                 second_tap=first_tap~=nil and tick-first_tap<=gap_ticks

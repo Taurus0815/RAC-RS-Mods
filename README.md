@@ -12,7 +12,7 @@ Direkte ZIP-Downloads / Direct ZIP downloads:
 
 | Paket / Package | Version | Download |
 | --- | --- | --- |
-| Rift Modern | 0.12.1 | [rift-modern-0.12.1.zip](https://github.com/Taurus0815/RAC-RS-Mods/raw/refs/heads/main/downloads/rift-modern-0.12.1.zip) |
+| Rift Modern | 0.12.2 | [rift-modern-0.12.2.zip](https://github.com/Taurus0815/RAC-RS-Mods/raw/refs/heads/main/downloads/rift-modern-0.12.2.zip) |
 | HQ Texture Remake — **beide Teile / both parts** | 2.0.0 | [Teil 1 / Part 1](https://github.com/Taurus0815/RAC-RS-Mods/releases/download/hq-texture-remake-v2.0.0/hq-texture-remake-2.0.0-part01.zip) · [Teil 2 / Part 2](https://github.com/Taurus0815/RAC-RS-Mods/releases/download/hq-texture-remake-v2.0.0/hq-texture-remake-2.0.0-part02.zip) |
 | HQ Texture Remake Lite — Figuren/Waffen / characters/weapons | 1.0.0 | [hq-texture-remake-1.0.0.zip](https://github.com/Taurus0815/RAC-RS-Mods/raw/refs/heads/main/downloads/hq-texture-remake-1.0.0.zip) |
 | Rift Modern: nativer Quellpatch / native source patch | RAC-RS 0.4.3 | [rift-modern-native-patch-0.4.3.zip](https://github.com/Taurus0815/RAC-RS-Mods/raw/refs/heads/main/downloads/rift-modern-native-patch-0.4.3.zip) |
@@ -23,11 +23,13 @@ Direkte ZIP-Downloads / Direct ZIP downloads:
 
 ### Rift Modern
 
+**0.12.2:** Schultermodus: Schüsse folgen der Blickrichtung beim seitlichen und rückwärtigen Laufen; Zoom erst beim Halten der Zieltaste. / Shoulder mode: camera-directed firing while strafing/backpedaling; zoom starts only on a sustained aim hold.
+
 **0.12.1:** Behebt den Stillstand trotz Laufanimation auf Kerwan. Der native Auswahlrad-Patch wurde korrigiert; die Scripts aktivieren keine alten unsicheren Ausblendungsroutinen mehr. / Fixes walking in place on Kerwan. The native wheel patch is corrected; scripts no longer enable unsafe legacy guards.
 
 - Von Rift Apart inspiriertes HUD und Menüdesign mit Cyan- und Violett-Akzenten.
 - Reaktionsschnelleres Laufen, Beschleunigen und Abbremsen mit nativer Kollision.
-- Zweimal kurz Zielen antippen schaltet die Schulteransicht samt seitlicher und rückwärtiger Bewegung ein oder aus.
+- Zweimal kurz Zielen antippen schaltet die Schulteransicht samt seitlicher und rückwärtiger Bewegung ein oder aus. Schüsse folgen dabei der Blickrichtung. Kurze Taps zoomen nicht; erst gehaltenes Zielen blendet den Zielzoom ein.
 - **Zielen halten + Viereck wirft den Schraubschlüssel** über den ursprünglichen Comet-Strike-Ablauf. Auf Xbox-Controllern: LT + X. Viereck allein bleibt Nahkampf; die eingerastete Schulteransicht allein zählt nicht als gehaltenes Zielen.
 - Kompaktes, pausiertes Auswahlrad mit farbigen Waffenbildern und scharfen Konturen. Die ursprüngliche Öffnungszeit für die Händler-Interaktion bleibt erhalten.
 - Waffenbilder statt Silhouetten auch im HUD und beim Händler.
@@ -60,7 +62,7 @@ Geprüft mit RAC-RS 0.4.3, PAL SCES-50916 v1.00, OmniLoader 0.1.0, Host-ABI 1.6 
 
 - Rift Apart-inspired HUD and menu styling with cyan and violet accents.
 - More responsive movement, acceleration and braking with native collision.
-- Double-tap aim to toggle shoulder framing with camera-relative sideways and backward movement.
+- Double-tap aim to toggle shoulder framing with camera-relative sideways/backward movement and firing along the camera view. Short taps do not zoom; a sustained aim hold blends into the aiming distance.
 - **Hold aim + press Square to throw the Omniwrench** using the original Comet Strike sequence. On Xbox controllers: LT + X. Square alone remains melee; toggled shoulder walking alone does not count as holding aim.
 - Compact paused quick-select wheel with full-colour weapon pictures and crisp edges. The original opening timing for vendor interactions is preserved.
 - Weapon pictures replace silhouettes in the HUD and at vendors as well.

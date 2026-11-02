@@ -1,8 +1,10 @@
-# Rift Modern 0.12.1
+# Rift Modern 0.12.2
 
 **Ersteller / Author: Taurus0815**
 
 ## Deutsch
+
+**Neu in 0.12.2:** Im per Doppeltipp aktivierten Schultermodus folgen Schüsse der Blickrichtung, auch beim seitlichen und rückwärtigen Laufen. Die Kamera bleibt dabei auf normalem Abstand. Kurze Zieltaps zoomen nicht; erst gehaltenes Zielen nach dem Tap-Fenster blendet den Zielzoom ein. Zielen + Nahkampf für den Wurf prüft weiterhin die tatsächlich gehaltene Zielaktion. Benötigt den aktualisierten nativen Player.
 
 **Korrektur 0.12.1:** Behebt Laufen auf der Stelle. Die Ausblendung des alten Auswahlrads darf nur geprüfte Zeichenroutinen überspringen. Ältere native Player verwenden mit diesen Scripts den Fade-Ersatzweg; für den korrigierten nativen Schutz den aktuellen Quellpatch anwenden und neu bauen.
 
@@ -26,6 +28,8 @@ J schaltet die Bewegungsreaktion um, K das HUD und U die Original-Menüansicht. 
 Die Gesundheitsanzeige verwendet standardmäßig die originale Spielgesundheit. Ein optionaler externer Modus ist für eine separat vorhandene, kompatible Nanotech-HUD-Integration gedacht. Arsenal Mastery wird nicht mitgeliefert. Bereits gespeicherte persönliche Werte bleiben erhalten.
 
 ## English
+
+**New in 0.12.2:** Double-tap shoulder mode fires along the camera view, including sideways and backward movement, while retaining the normal camera distance. Short aim taps do not zoom; a sustained aim hold past the tap window blends into the aiming distance. Aim + melee still checks the physically held aim action before throwing the wrench. Requires the updated native player.
 
 **Fix in 0.12.1:** Restores walking. Hiding the original wheel may skip only verified drawing routines. These scripts use the fade fallback on older native players; apply the current source patch and rebuild for the corrected native guard.
 
