@@ -1,63 +1,41 @@
-# Rift Modern 0.12.2
+# Rift Modern 0.15.0
 
 **Ersteller / Author: Taurus0815**
 
 ## Deutsch
 
-**Neu in 0.12.2:** Im per Doppeltipp aktivierten Schultermodus folgen Schüsse der Blickrichtung, auch beim seitlichen und rückwärtigen Laufen. Die Kamera bleibt dabei auf normalem Abstand. Kurze Zieltaps zoomen nicht; erst gehaltenes Zielen nach dem Tap-Fenster blendet den Zielzoom ein. Zielen + Nahkampf für den Wurf prüft weiterhin die tatsächlich gehaltene Zielaktion. Benötigt den aktualisierten nativen Player.
+**Neu in 0.15.0:** Das Standard-HUD und die Originalmenüs bleiben aktiv; das Rift-HUD ist standardmäßig aus. Zweimal kurz die vom Launcher zugewiesene Aim-Taste drücken, um das Anvisieren ein- oder auszuschalten. Gedrückt halten bleibt temporäres Zielen. Das pausierte Schnellrad zeigt die beigefügten hochauflösenden 3D-Waffenbilder. Dafür ist der native RAC-RS-0.5.1-Patch aus diesem Repository erforderlich; ohne Patch erscheinen die originalen Spielbilder.
 
-**Korrektur 0.12.1:** Behebt Laufen auf der Stelle. Die Ausblendung des alten Auswahlrads darf nur geprüfte Zeichenroutinen überspringen. Ältere native Player verwenden mit diesen Scripts den Fade-Ersatzweg; für den korrigierten nativen Schutz den aktuellen Quellpatch anwenden und neu bauen.
+- Das Schnellrad pausiert weiterhin das Spiel und übernimmt die Auswahl beim Loslassen.
+- Originale Controller-Belegung des Launchers und andere Menüs bleiben unangetastet.
+- Bewegung, Schraubenschlüssel, Aufschlag und Bolt-Anziehung bleiben einstellbar.
+- Das Rift-HUD kann in den Mod-Einstellungen ausdrücklich eingeschaltet werden; im Preset „Rift Modern“ bleibt es aus.
 
-Rift-Apart-inspiriertes HUD, Menüdesign und reaktionsschnellere Steuerung für RAC-RS 0.4.3. Benötigt OmniLoader 0.1.0, Host-ABI 1.6 und Script-API 1.3. Geprüft auf PAL SCES-50916 v1.00.
-
-- Originale Kollision, Bodenphysik und Waffenabläufe bleiben erhalten.
-- Zweimal kurz Zielen antippen: Schulteransicht mit seitlicher/rückwärtiger Bewegung ein-/ausschalten. Normales Halten bleibt temporäres Zielen.
-- Zielen halten + Viereck/X: nativer Schraubschlüsselwurf (Comet Strike, mit den ursprünglichen Aktionsbedingungen). Viereck allein bleibt normaler Nahkampf; Sprung-/Aufschlagaktionen laufen weiter nativ.
-- Kompaktes pausiertes Auswahlrad mit farbigen Bildern aus den Waffen-/Gadget-Modellen. Ein hochauflösender Ring ersetzt die vielen kleinen Zeichenstreifen.
-- Das originale Rad wird bei eingeschaltetem Pause-Rad ausgeblendet. Die originale Haltezeit und die erste Dreieck-Eingabe bleiben für Händler und andere Interaktionen erhalten.
-- Waffenbilder auch im HUD und beim Händler. Geschwindigkeit, Aufschlag-Radien und Bolt-Anziehung sind in den Mod-Optionen regelbar.
+RAC-RS 0.5.1, OmniLoader 0.1.0, Host-ABI 1.6 und Script-API 1.3. Die hochauflösenden 3D-Waffenbilder benötigen den nativen Patch `native-patch/rift-modern-rac-rs-0.5.1.patch` aus diesem Repository; ohne Patch nutzt das Rad die Spielgrafik. Geprüft auf PAL SCES-50916 v1.00.
 
 ### Installation
 
-Den vollständigen Ordner `rift-modern` mit `main.luau`, `omni-mod.json`, `mod.json`, `images` und `textures` nach `mods` kopieren. Vorher vorhandene Dateien sichern und die Mod im Launcher aktivieren.
-
-Für Schulterbewegung, gemeinsamen nativen Menü-Skin, hochauflösende Bilder im eigenen Rad und die reine Zeichenunterdrückung des alten Rads zusätzlich den [nativen Quellpatch für RAC-RS 0.4.3](../../native-patch/README.md) anwenden und den Player neu bauen. Die Bilder sind Teil dieser Mod; die ZIP installiert keinen neuen Player. Mit HQ Texture Remake zusammen muss Rift Modern in der Aktivliste davor stehen.
-
-J schaltet die Bewegungsreaktion um, K das HUD und U die Original-Menüansicht. Diese Tasten sind frei belegbar. Die neue Wurfkombination folgt den eingestellten Ziel- und Nahkampf-Aktionen; sie schreibt keine Launcher-Belegung um. Die Option `Aim + melee: wrench throw` kann separat ausgeschaltet werden.
-
-Die Gesundheitsanzeige verwendet standardmäßig die originale Spielgesundheit. Ein optionaler externer Modus ist für eine separat vorhandene, kompatible Nanotech-HUD-Integration gedacht. Arsenal Mastery wird nicht mitgeliefert. Bereits gespeicherte persönliche Werte bleiben erhalten.
+Den vollständigen Ordner `rift-modern` mit `main.luau`, `omni-mod.json`, `mod.json`, `images` und `textures` nach `mods` kopieren und die Mod im Launcher aktivieren. Vorhandene Dateien vorher sichern. Mit HQ Texture Remake zusammen Rift Modern in der Aktivliste davor setzen.
 
 ## English
 
-**New in 0.12.2:** Double-tap shoulder mode fires along the camera view, including sideways and backward movement, while retaining the normal camera distance. Short aim taps do not zoom; a sustained aim hold past the tap window blends into the aiming distance. Aim + melee still checks the physically held aim action before throwing the wrench. Requires the updated native player.
+**New in 0.15.0:** The standard HUD and original menus remain active. Rift Modern's own HUD is off by default. Double-tap the Aim button to toggle aiming; holding it remains temporary aim. The paused wheel now displays the included high-resolution weapon portraits, with the game's Quick Select artwork as fallback.
 
-**Fix in 0.12.1:** Restores walking. Hiding the original wheel may skip only verified drawing routines. These scripts use the fade fallback on older native players; apply the current source patch and rebuild for the corrected native guard.
+- The Quick Select wheel still pauses the game and commits the selection on release.
+- Launcher controller bindings and other menus remain untouched.
+- Movement, wrench, overhead impact and bolt attraction remain configurable.
+- The Rift HUD can be explicitly enabled in mod settings; it stays off in the “Rift Modern” preset.
 
-Rift Apart-inspired HUD, menu styling and more responsive controls for RAC-RS 0.4.3. Requires OmniLoader 0.1.0, host ABI 1.6 and script API 1.3. Checked on PAL SCES-50916 v1.00.
-
-- Native collision, ground physics and weapon routines are retained.
-- Double-tap aim to toggle shoulder framing with sideways/backward movement. Holding aim normally remains temporary aiming.
-- Hold aim + press Square/X for the native Comet Strike wrench throw, subject to the original action conditions. Melee alone remains normal melee; jumping and ground impacts keep their native paths.
-- Compact paused quick-select wheel with full-colour pictures rendered from the weapon/gadget models. A high-resolution ring replaces the many small drawing strips.
-- The original wheel is hidden when the paused wheel is enabled. The original hold delay and initial Triangle input remain available for vendors and other interactions.
-- Weapon pictures also appear in the HUD and at vendors. Animation speeds, impact radii and bolt attraction are adjustable in the mod settings.
+RAC-RS 0.5.1, OmniLoader 0.1.0, host ABI 1.6 and script API 1.3. The high-resolution 3D weapon portraits require the native `native-patch/rift-modern-rac-rs-0.5.1.patch` in this repository; without it, the wheel falls back to the game artwork. Checked on PAL SCES-50916 v1.00.
 
 ### Installation
 
-Copy the complete `rift-modern` folder, including `main.luau`, `omni-mod.json`, `mod.json`, `images` and `textures`, into `mods`. Back up existing files and enable the mod in the launcher.
+Copy the complete `rift-modern` folder, including `main.luau`, `omni-mod.json`, `mod.json`, `images` and `textures`, to `mods`, then enable it in the launcher. Back up existing files first. When used with HQ Texture Remake, place Rift Modern above it in the active list.
 
-Shoulder locomotion, the shared native menu skin, high-resolution pictures in the custom wheel and render-only suppression of the original wheel additionally require the [RAC-RS 0.4.3 native source patch](../../native-patch/README.md) and a rebuilt player. The pictures are included in this mod; the ZIP does not install a new player. When used with HQ Texture Remake, place Rift Modern above it in the active list.
+## Downloads / Downloads
 
-J toggles movement response, K toggles the HUD and U toggles the original menu view. These keys are configurable. The wrench combo follows the configured aim and melee actions and does not overwrite launcher bindings. `Aim + melee: wrench throw` can be disabled separately.
+[ZIP and previews](https://github.com/Taurus0815/RAC-RS-Mods)
 
-Health rendering defaults to the original game's health. An optional external mode is intended for a separately installed compatible Nanotech HUD integration. Arsenal Mastery is not bundled. Existing personal settings are preserved.
+## License
 
-## Downloads und Bilder / Downloads and pictures
-
-[ZIP-Pakete und Vorschauen / ZIP packages and previews](https://github.com/Taurus0815/RAC-RS-Mods)
-
-## Lizenz / License
-
-Die Script-Dateien stehen unter der beiliegenden MIT-Lizenz. Waffenbilder sind aus der lokalen Disc gerenderte Spielgrafiken; die MIT-Lizenz der Scripts gilt nicht für diese Grafiken. Verarbeitung und Prüfsummen: `picture-receipt.json`.
-
-Scripts use the included MIT license. Weapon pictures are game graphics rendered from the local disc; the script license does not apply to those graphics. Processing details and checksums: `picture-receipt.json`.
+Scripts use the included MIT license. Weapon picture provenance and checksums are in `picture-receipt.json`.

@@ -1,5 +1,5 @@
 --!nonstrict
--- Rift Modern 0.12.2, matched to RAC-RS 0.4.2/0.4.3 / OmniLoader ABI 1.6.
+-- Rift Modern 0.15.0, matched to RAC-RS 0.5.1 / OmniLoader ABI 1.6.
 assert(omni.has and omni.has("omni.events") and omni.has("omni.draw"), "RAC-RS drawing/events required")
 
 local state = { movement = true, hud = true }
@@ -8,12 +8,10 @@ local hud = require("hud")
 movement.setup(state)
 hud.setup(state)
 require("controller").setup(state)
-require("menu").setup(state)
 require("melee").setup()
 require("magnet").setup()
 require("slam").setup()
 require("wheel").setup(state)
-require("camera").setup()
 
 local function pressed(binding)
     if type(binding) ~= "string" then return false end
@@ -37,4 +35,4 @@ omni.on_frame(function()
         omni.log("HUD toggle: " .. tostring(state.hud))
     end
 end)
-omni.log("Rift Modern 0.12.2 ready; native collision, jump and launcher camera settings retained")
+omni.log("Rift Modern 0.15.0 ready; native menus and standard HUD retained; paused Quick Select enabled")

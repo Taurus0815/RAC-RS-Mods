@@ -1,0 +1,189 @@
+diff --git "a/rac-rs/src/engine/omni/draw_art.rs" "b/rac-rs/src/engine/omni/draw_art.rs"
+index dc3f33b..11f74a2 100644
+--- "a/rac-rs/src/engine/omni/draw_art.rs"
++++ "b/rac-rs/src/engine/omni/draw_art.rs"
+@@ -24,6 +24,8 @@ pub enum Src {
+ 	Item(u8),
+ 	/// Frame 3 of item sheet 0xea60 + id: the ammo HUD's weapon icon.
+ 	Hud(u8),
++	/// Rift Modern high-resolution weapon portraits and radial-wheel panels.
++	Rift,
+ }
+ 
+ pub struct IconDef {
+@@ -47,6 +49,12 @@ fn build_defs() -> Vec<IconDef> {
+ 			None => v.push(IconDef { name: format!("item.{id}"), src: Src::Item(id) }),
+ 		}
+ 	}
++	for name in ["rift.wheel.base", "rift.wheel.focus.0", "rift.wheel.focus.1", "rift.wheel.focus.2", "rift.wheel.focus.3", "rift.wheel.focus.4", "rift.wheel.focus.5", "rift.wheel.focus.6", "rift.wheel.focus.7"] {
++		v.push(IconDef { name: name.into(), src: Src::Rift });
++	}
++	for id in 8..=26 {
++		v.push(IconDef { name: format!("rift.item.{id}"), src: Src::Rift });
++	}
+ 	v
+ }
+ 
+diff --git "a/rac-rs/src/rac1/host/app_state.rs" "b/rac-rs/src/rac1/host/app_state.rs"
+index af6ccd3..91380c1 100644
+--- "a/rac-rs/src/rac1/host/app_state.rs"
++++ "b/rac-rs/src/rac1/host/app_state.rs"
+@@ -85,6 +85,8 @@ pub(super) struct HudArt {
+ 	pub(super) glove: Vec<(usize, f32, f32)>,
+ 	/// Ammo HUD weapon icons: frame 3 of 0xea60+id (hud.md "Ammo HUD").
+ 	pub(super) weapon_icons: HashMap<u8, (usize, f32, f32)>,
++	/// Rift Modern high-resolution portraits and wheel panels, keyed by Omni icon name.
++	pub(super) rift: HashMap<String, (usize, f32, f32)>,
+ 	/// The memory-card save icon 0x755d (decomp/notes/ingame_save_quit.md s6).
+ 	pub(super) save: Vec<(usize, f32, f32)>,
+ 	/// Sound page volume fill 0xe99e frames 8/9, Quick Select backdrop 0xe934 frame 0 and highlight
+diff --git "a/rac-rs/src/rac1/host/hudart.rs" "b/rac-rs/src/rac1/host/hudart.rs"
+index 78bc1e2..032c73d 100644
+--- "a/rac-rs/src/rac1/host/hudart.rs"
++++ "b/rac-rs/src/rac1/host/hudart.rs"
+@@ -2,6 +2,7 @@
+ //! slot table; a missing piece falls back to a plain shape.
+ use super::*;
+ pub(super) mod glyphtex;
++pub(super) mod rift_assets;
+ 
+ /// Decodes the HUD sprites (bolt icon 0x754f, counter bar 0x7580, nanotech orb 0x7536) and the
+ /// default font; returns the textures in slot order. Missing pieces fall back to plain shapes.
+@@ -157,6 +158,7 @@ pub(super) fn hud_art(l: &Level, disc: &mut iso::Disc) -> (Vec<Texture>, HudArt)
+ 		a.items.insert(crate::inventory::BOMB_GLOVE, g);
+ 	}
+ 	load_fonts(l, disc, &mut tex, &mut a);
++	rift_assets::load(&mut tex, &mut a);
+ 	finish_names(l, &mut tex, names);
+ 	(tex, a)
+ }
+@@ -217,6 +219,7 @@ pub(super) fn publish_omni(a: &HudArt) {
+ 			Src::Nano => a.orb.first().copied(),
+ 			Src::Item(id) => a.items.get(&id).copied(),
+ 			Src::Hud(id) => a.weapon_icons.get(&id).copied(),
++			Src::Rift => a.rift.get(&d.name).copied(),
+ 		})
+ 		.collect();
+ 	crate::omni::draw_art::set(Art { font: a.font.clone(), icons });
+diff --git "a/rac-rs/src/rac1/retail/modcam.rs" "b/rac-rs/src/rac1/retail/modcam.rs"
+index d5f2d8c..a192c4b 100644
+--- "a/rac-rs/src/rac1/retail/modcam.rs"
++++ "b/rac-rs/src/rac1/retail/modcam.rs"
+@@ -115,9 +115,61 @@ pub fn ui_aim(down: bool) {
+ /// Gamepad R2 held (prompts.rs `poll_pad`): aim mode like RMB.
+ static PAD_AIM: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+ 
+-/// R2 down / up on the gamepad.
+-pub fn pad_aim(down: bool) {
+-	PAD_AIM.store(down, std::sync::atomic::Ordering::Relaxed);
++/// Double-tap state for the controller's already-remapped Aim action.
++#[derive(Default)]
++struct PadAimTap {
++	tick: u32,
++	press_at: Option<u32>,
++	first_tap: Option<u32>,
++	second_tap: bool,
++	previous: bool,
++	latched: bool,
++}
++static PAD_AIM_TAP: Mutex<PadAimTap> = Mutex::new(PadAimTap { tick: 0, press_at: None, first_tap: None, second_tap: false, previous: false, latched: false });
++
++/// Gamepad Aim down / up after RAC-RS has applied the user's button remap.
++/// Two taps (each <=250 ms, within 380 ms) toggle persistent Aim; a normal hold still aims while held.
++pub fn pad_aim(down: bool, gameplay: bool) {
++	let mut effective = down;
++	if let Ok(mut s) = PAD_AIM_TAP.lock() {
++		if !gameplay {
++			*s = PadAimTap::default();
++			PAD_AIM.store(false, std::sync::atomic::Ordering::Relaxed);
++			return;
++		}
++		s.tick = s.tick.wrapping_add(1);
++		let tick = s.tick;
++		if !down {
++			if s.previous {
++				let short = s.press_at.is_some_and(|t| tick.wrapping_sub(t) <= 13);
++				if short && s.second_tap {
++					s.latched = !s.latched;
++					s.first_tap = None;
++					eprintln!("controller Aim double-tap: latched={}", s.latched);
++				} else if short {
++					s.first_tap = Some(tick);
++				} else {
++					s.first_tap = None;
++				}
++				s.press_at = None;
++				s.second_tap = false;
++			}
++			s.previous = false;
++			effective = s.latched;
++		} else {
++			if !s.previous {
++				if s.first_tap.is_some_and(|t| tick.wrapping_sub(t) <= 19) {
++					s.second_tap = true;
++				} else {
++					s.first_tap = None;
++					s.second_tap = false;
++				}
++				s.press_at = Some(tick);
++			}
++			s.previous = true;
++		}
++	}
++	PAD_AIM.store(effective, std::sync::atomic::Ordering::Relaxed);
+ }
+ 
+ /// Wheel lines (positive = away from the user = zoom in).
+diff --git "a/rac-rs/src/rac1/retail/prompts.rs" "b/rac-rs/src/rac1/retail/prompts.rs"
+index e153060..da2bd0f 100644
+--- "a/rac-rs/src/rac1/retail/prompts.rs"
++++ "b/rac-rs/src/rac1/retail/prompts.rs"
+@@ -858,7 +858,7 @@ static ROUTE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0
+ /// aim CONSUMES every output of its buttons (not only R2); the keyboard's buttons and what another button also gives stay.
+ pub fn route_r2(buttons: &mut u16, gameplay: bool, ratchet: bool) {
+ 	let down = apply_r2(buttons, PadRoute::unpack(ROUTE.load(Ordering::Relaxed)), gameplay, ratchet, super::modcam::classic::aim_button());
+-	super::modcam::pad_aim(down);
++	super::modcam::pad_aim(down, gameplay);
+ }
+ 
+ /// `route_r2` without the globals; returns whether the aim mode is down. The aim has the buttons exactly while it is the aim's field
+diff --git "a/rac-rs/src/rac1/host/hudart/rift_assets.rs" "b/rac-rs/src/rac1/host/hudart/rift_assets.rs"
+new file mode 100644
+index 0000000..a9a9bc9
+--- /dev/null
++++ "b/rac-rs/src/rac1/host/hudart/rift_assets.rs"
+@@ -0,0 +1,33 @@
++//! Optional Rift Modern weapon pictures and wheel panels, loaded with HUD art.
++use super::*;
++
++pub(super) fn load(tex: &mut Vec<Texture>, art: &mut HudArt) {
++	let Some(root) = crate::texpack::mods::mods_root() else { return };
++	let active = std::fs::read_to_string(root.join("active.txt")).unwrap_or_default();
++	if !active.lines().any(|line| line.split('#').next().unwrap_or("").trim() == "rift-modern") {
++		return;
++	}
++	let folder = root.join("rift-modern").join("images");
++	for def in crate::omni::draw_art::defs().iter().filter(|def| matches!(def.src, crate::omni::draw_art::Src::Rift)) {
++		let file = if let Some(id) = def.name.strip_prefix("rift.item.") {
++			format!("item-{id}.png")
++		} else if def.name == "rift.wheel.base" {
++			"wheel-base.png".into()
++		} else if let Some(i) = def.name.strip_prefix("rift.wheel.focus.") {
++			format!("wheel-focus-{i}.png")
++		} else {
++			continue;
++		};
++		let Ok(bytes) = std::fs::read(folder.join(&file)) else { continue };
++		if bytes.len() > 8 * 1024 * 1024 { continue; }
++		let image = match crate::texpack::png::load(&bytes) {
++			Ok(image) if image.w <= 2048 && image.h <= 2048 => image,
++			Ok(_) => continue,
++			Err(err) => { eprintln!("rift art: {file}: {err}"); continue; }
++		};
++		let rgba = image.levels[0].chunks_exact(4).map(|p| [p[0], p[1], p[2], p[3]]).collect();
++		art.rift.insert(def.name.clone(), (1 + tex.len(), image.w as f32, image.h as f32));
++		tex.push(Texture { w: image.w as usize, h: image.h as usize, rgba });
++	}
++	eprintln!("rift art: {} high-resolution pictures and wheel panels loaded", art.rift.len());
++}
+

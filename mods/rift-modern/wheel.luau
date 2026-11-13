@@ -91,13 +91,9 @@ local function draw(w)
         local angle=(i-1)*math.pi/4
         local x,y=cx+math.sin(angle)*71,cy-math.cos(angle)*71
         if id>1 then
-            if art["rift.item."..id] then
-                d.icon(x-22,y-22,44,44,"rift.item."..id,{tint=0xFFFFFFFF,layer="menu"})
-            else
-                local icon=(items[id] and items[id][2]) or ("item."..id)
-                if string.sub(icon,1,7)=="weapon." then icon..=".hud" end
-                d.icon(x-12,y-12,24,24,icon,{tint=0xFFFFFFFF,layer="menu"})
-            end
+            -- Use the item's Quick Select picture (frame 0), not the tiny ammo-HUD symbol (frame 3).
+            local icon=(items[id] and items[id][2]) or ("item."..id)
+            d.icon(x-19,y-19,38,38,icon,{tint=0xFFFFFFFF,layer="menu"})
         else
             d.rect(x-2,y-1,4,2,0x637B9560,layer)
         end
@@ -108,12 +104,9 @@ local function draw(w)
         end
     end
     local id=w.slots[w.selected]
-    if art["rift.item."..id] then
-        d.text(cx,cy-41,"PAUSIERT",{size=0.4,align="center",color=0xA9D5E8FF,shadow=0x071321FF,layer="menu"})
-        d.icon(cx-31,cy-31,62,62,"rift.item."..id,{tint=0xFFFFFFFF,layer="menu"})
-    else
-        d.text(cx,cy-8,"PAUSIERT",{size=0.42,align="center",color=0xD6F6FFFF,shadow=0x071321FF,layer="menu"})
-    end
+    d.text(cx,cy-41,"PAUSIERT",{size=0.4,align="center",color=0xA9D5E8FF,shadow=0x071321FF,layer="menu"})
+    local selected_icon=(items[id] and items[id][2]) or ("item."..id)
+    d.icon(cx-31,cy-31,62,62,selected_icon,{tint=0xFFFFFFFF,layer="menu"})
     d.text(cx,cy+104,(items[id] and items[id][1]) or ("ITEM "..id),{size=0.46,align="center",color=0xF0FBFFFF,shadow=0x071321FF,layer="menu"})
 end
 

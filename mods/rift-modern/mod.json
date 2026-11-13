@@ -1,10 +1,10 @@
 {
   "format": 1,
   "id": "rift-modern",
-  "name": "Rift Modern — Weapon Pictures",
+  "name": "Rift Modern — Paused Quick Select",
   "author": "Taurus0815",
-  "version": "0.12.2",
-  "description": "Full-colour weapon pictures rendered from native models for Quick Select, the HUD and vendors. Includes high-resolution cached radial-menu art.",
+  "version": "0.15.0",
+  "description": "Paused weapon selection with Rift Modern high-resolution 3D weapon portraits; original HUD and menus by default.",
   "game": "rac1",
   "kind": "textures",
   "serials": [

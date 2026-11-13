@@ -53,3 +53,17 @@ Prüft die Zuordnung gegen die lokal generierten Zeichen-Templates. / Checks the
 Native Code-Erweiterungen: GPL-3.0 gemäß RAC-RS. Scripts und Spielgrafiken besitzen ihre jeweils angegebenen eigenen Lizenzen bzw. Herkunftsangaben.
 
 Native code extensions: GPL-3.0, following RAC-RS. Scripts and game graphics retain their separate stated licenses or provenance.
+
+
+## Rift Modern 0.15.0 — RAC-RS 0.5.1
+
+The companion patch registers Rift Modern's high-resolution weapon portraits and wheel panels with the HUD texture table. It also handles double-tap Aim through RAC-RS's already-remapped controller Aim action, preserving the launcher mapping.
+
+From the RAC-RS 0.5.1 source root, check and apply the patch:
+
+```powershell
+git apply --check -p1 C:\path\to\RAC-RS-Mods\native-patch\rift-modern-rac-rs-0.5.1.patch
+git apply -p1 C:\path\to\RAC-RS-Mods\native-patch\rift-modern-rac-rs-0.5.1.patch
+```
+
+Then rebuild the existing RAC-RS Windows target using its normal setup/build process. The patch was checked against the matching 0.5.1 source and compiled into the local Windows build. The mod ZIP itself contains the PNG assets but not a game executable. On an unpatched build the wheel falls back to original game artwork.
