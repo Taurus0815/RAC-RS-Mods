@@ -37,20 +37,13 @@
       "default": true
     },
     {
-      "key": "walk_shoulder",
-      "name": "Double-tap aim for shoulder movement",
-      "description": "Two short aim taps toggle shoulder framing plus camera-relative side/back movement. Starts off. A held aim button remains temporary aiming; launcher controls and native collision are preserved.",
-      "type": "bool",
-      "default": true
-    },
-    {
       "default": true,
       "name": "Modern movement",
       "type": "bool",
       "key": "modern_movement"
     },
     {
-      "min": 1.0,
+      "min": 1,
       "step": 0.05,
       "key": "movement_response",
       "default": 1.6,
@@ -68,7 +61,7 @@
       "min": 0.8,
       "step": 0.05,
       "key": "hud_scale",
-      "default": 1.0,
+      "default": 1,
       "max": 1.15,
       "name": "HUD scale",
       "type": "float"
@@ -121,8 +114,8 @@
       "name": "Wrench swing speed",
       "type": "float",
       "default": 1.6,
-      "min": 1.0,
-      "max": 4.0,
+      "min": 1,
+      "max": 4,
       "step": 0.05,
       "description": "Grounded wrench swings only; 1.0 restores original speed. Damage per hit is unchanged."
     },
@@ -134,9 +127,9 @@
       "description": "Hold Triangle/Y for a radial selector with real native Pause. Release to equip and resume. Circle/B cancels."
     },
     {
-      "max": 4.0,
+      "max": 4,
       "description": "Jump + wrench animation speed; preserves native landing physics.",
-      "min": 1.0,
+      "min": 1,
       "step": 0.05,
       "key": "slam_speed",
       "type": "float",
@@ -144,19 +137,19 @@
       "default": 1.6
     },
     {
-      "max": 10.0,
+      "max": 10,
       "description": "Extra crate wave when the overhead strike lands. Set 0 for original reach.",
-      "min": 0.0,
+      "min": 0,
       "step": 0.5,
       "key": "slam_crate_radius",
       "type": "float",
       "name": "Overhead crate radius (m)",
-      "default": 6.0
+      "default": 6
     },
     {
-      "max": 5.0,
+      "max": 5,
       "description": "Native wrench damage to nearby enemies on overhead ground impact. Set 0 to disable.",
-      "min": 0.0,
+      "min": 0,
       "step": 0.25,
       "key": "slam_enemy_radius",
       "type": "float",
@@ -164,21 +157,20 @@
       "default": 2.5
     },
     {
-      "max": 3.0,
+      "max": 3,
       "description": "Multiplier of native bolt magnet distance and height.",
-      "min": 1.0,
+      "min": 1,
       "step": 0.25,
       "key": "bolt_radius",
       "type": "float",
       "name": "Bolt attraction radius",
-      "default": 2.0
+      "default": 2
     }
   ],
   "presets": [
     {
       "values": {
-        "walk_shoulder": true,
-        "hud_scale": 1.0,
+        "hud_scale": 1,
         "show_bolts": false,
         "movement_response": 1.6,
         "show_weapon": false,
@@ -190,8 +182,8 @@
         "wrench_speed": 1.6,
         "pause_wheel": true,
         "slam_speed": 1.6,
-        "bolt_radius": 2.0,
-        "slam_crate_radius": 6.0,
+        "bolt_radius": 2,
+        "slam_crate_radius": 6,
         "slam_enemy_radius": 2.5
       },
       "name": "Rift Modern",
@@ -200,7 +192,7 @@
     {
       "values": {
         "modern_movement": true,
-        "movement_response": 2.0
+        "movement_response": 2
       },
       "name": "Fast",
       "id": "fast"
@@ -208,14 +200,13 @@
     {
       "values": {
         "modern_movement": false,
-        "walk_shoulder": false,
         "modern_hud": true,
-        "wrench_speed": 1.0,
+        "wrench_speed": 1,
         "pause_wheel": false,
-        "slam_speed": 1.0,
-        "bolt_radius": 1.0,
-        "slam_crate_radius": 0.0,
-        "slam_enemy_radius": 0.0
+        "slam_speed": 1,
+        "bolt_radius": 1,
+        "slam_crate_radius": 0,
+        "slam_enemy_radius": 0
       },
       "name": "HUD only",
       "id": "hud_only"
