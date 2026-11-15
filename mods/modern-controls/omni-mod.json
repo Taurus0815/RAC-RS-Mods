@@ -2,7 +2,7 @@
   "format": 2,
   "id": "modern-controls",
   "name": "Modern Controls",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "author": "Taurus0815",
   "description": "Modern Controls: responsive movement, fixed 3x original ammo limits, 10x bolts, 10x Thruster-Pack glide and press R1 once free flight. Original HUD and menus retained.",
   "license": "MIT",
@@ -31,7 +31,10 @@
     "rac1.omni.ammo.collect",
     "rac1.omni.ammo.add",
     "rac1.player.set_planar_velocity",
-    "rac1.player.apply_vertical_motion"
+    "rac1.player.apply_vertical_motion",
+    "rac1.player.hover_planar_motion",
+    "rac1.player.hover_planar_motion_alt",
+    "rac1.player.hover_height_spring"
   ],
   "settings": [
     {

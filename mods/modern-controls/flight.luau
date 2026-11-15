@@ -4,7 +4,7 @@
 local M = {}
 local layout = require("layout")
 local CROSS, DESCEND = 0x40, 0x4 -- mapped Jump / L1
-local TRIGGER = 0x8 -- R1; consume only during Thruster-Pack glide
+local TRIGGER = 0x8 -- remapped R1 / keyboard Crouch (default: left Ctrl)
 
 function M.setup()
     local tps = omni.ticks_per_second() or 50
@@ -20,7 +20,10 @@ function M.setup()
     end
 
     local function gliding()
-        if omni.mode() ~= "gameplay" or omni.fields.hero.state ~= 8 then return nil end
+        local state = omni.fields.hero.state
+        -- State 8 is airborne gliding; 0x81 is the actual Thruster-Pack hover
+        -- observed in this installation. They use different movement routines.
+        if omni.mode() ~= "gameplay" or (state ~= 8 and state ~= 0x81) then return nil end
         local base = layout.hero()
         if not base or omni.read("u8", base + 0x20a4) ~= 0
             or omni.read("u8", base + 0x20b3) ~= 0 then return nil end
@@ -53,9 +56,14 @@ function M.setup()
         end
         local trigger = bit32.band(down, TRIGGER) ~= 0
         if trigger and not previous then
-            if omni.has("rac1.player.apply_vertical_motion") then
+            local supported = omni.has("rac1.player.apply_vertical_motion")
+            if omni.fields.hero.state == 0x81 then
+                supported = supported and (omni.has("rac1.player.hover_planar_motion") or omni.has("rac1.player.hover_planar_motion_alt"))
+                    and omni.has("rac1.player.hover_height_spring")
+            end
+            if supported then
                 active = not active
-                omni.log("free flight " .. (active and "on" or "off"))
+                omni.log("free flight " .. (active and "on" or "off") .. "; state=" .. tostring(omni.fields.hero.state))
             elseif not warned then
                 warned = true
                 omni.warn("free flight needs the companion flight-support binding next to the player")
@@ -69,14 +77,11 @@ function M.setup()
             buffer.writeu8(report, 15, 0)
         end
         if active then
-            -- Keep the native glide alive while flying hands-off.
-            set_cross(report, down, true)
-            if active and descend then
-                local released = bit32.band(bit32.bnot(bit32.band(bit32.bor(down, CROSS), bit32.bnot(DESCEND))), 0xffff)
-                buffer.writeu8(report, 0, bit32.rshift(released, 8))
-                buffer.writeu8(report, 1, bit32.band(released, 255))
-                buffer.writeu8(report, 14, 0)
-            end
+            down = bit32.band(down, bit32.bnot(DESCEND))
+            -- Glide needs held Jump; native hover exits on a fresh Jump, so
+            -- consume it there and use the physical input only for ascent.
+            set_cross(report, down, omni.fields.hero.state == 8)
+            buffer.writeu8(report, 14, 0)
         end
     end)
 
@@ -97,6 +102,43 @@ function M.setup()
             if omni.read("f32", speed_at) == speed then omni.write("f32", speed_at, old) end
             if not ok then error(result, 0) end
             return result
+        end)
+    end
+
+    for _, id in ipairs({"rac1.player.hover_planar_motion", "rac1.player.hover_planar_motion_alt"}) do
+        if omni.has(id) then omni.hook(id, function(original, acceleration)
+            local base = omni.fields.hero.state == 0x81 and gliding() or nil
+            if not base then return original(acceleration) end
+            local factor = math.clamp(omni.setting("hover_speed") or 10, 1, 10)
+            local at = base + 0x190
+            local before = omni.read("f32", at)
+            local target = before * factor
+            omni.write("f32", at, target)
+            local ok, result = pcall(original, acceleration * factor)
+            if omni.read("f32", at) == target then omni.write("f32", at, before) end
+            if not ok then error(result, 0) end
+            if active then
+                local speed = 5.75 * factor * magnitude / tps
+                local yaw = omni.fields.hero.move_yaw
+                omni.write("f32", base + 0xe0, math.cos(yaw) * speed)
+                omni.write("f32", base + 0xe4, math.sin(yaw) * speed)
+            end
+            return result
+        end) end
+    end
+
+    if omni.has("rac1.player.hover_height_spring") then
+        omni.hook("rac1.player.hover_height_spring", function(original, position, velocity, target, acceleration, limit, threshold)
+            local base = active and omni.fields.hero.state == 0x81 and gliding() or nil
+            if not base or position ~= base + 0x88 or velocity ~= base + 0x304 then
+                return original(position, velocity, target, acceleration, limit, threshold)
+            end
+            -- Close to the floor, native hover otherwise locks the hero to its
+            -- hover height. Replace only that spring with a collision-tested
+            -- velocity; position itself is still advanced by the native solver.
+            local vertical = (jump and 1 or 0) - (descend and 1 or 0)
+            omni.write("f32", velocity, 0)
+            omni.write("f32", base + 0xe8, vertical * 12 / tps)
         end)
     end
 

@@ -2564,6 +2564,38 @@
         "drop"
       ],
       "about": "Subtracts drop along gravity from a hero motion vector; normal, inverted or wall gravity. Modern Controls limits its override to the native glide state and the hero motion buffer. PAL t_301 verified across all 19 levels."
+    },
+    {
+      "id": "rac1.player.hover_planar_motion",
+      "name": "hover_planar_motion",
+      "signature": "void(f32)",
+      "params": [
+        "acceleration"
+      ],
+      "about": "Modern Controls: narrow helper for native Thruster hover state 0x81. Exact structural match in 10 PAL overlays; script checks hero buffer/state before altering behavior."
+    },
+    {
+      "id": "rac1.player.hover_planar_motion_alt",
+      "name": "hover_planar_motion_alt",
+      "signature": "void(f32)",
+      "params": [
+        "acceleration"
+      ],
+      "about": "Modern Controls: narrow helper for native Thruster hover state 0x81. Exact structural match in 9 PAL overlays; script checks hero buffer/state before altering behavior."
+    },
+    {
+      "id": "rac1.player.hover_height_spring",
+      "name": "hover_height_spring",
+      "signature": "void(u32,u32,f32,f32,f32,f32)",
+      "params": [
+        "position",
+        "velocity",
+        "target",
+        "acceleration",
+        "limit",
+        "threshold"
+      ],
+      "about": "Modern Controls: narrow helper for native Thruster hover state 0x81. Exact structural match in all 19 PAL overlays; script checks hero buffer/state before altering behavior."
     }
   ],
   "functions": [

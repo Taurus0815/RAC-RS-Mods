@@ -1,4 +1,4 @@
-# Modern Controls 0.3.2
+# Modern Controls 0.3.3
 
 **Ersteller / Author: Taurus0815**
 
@@ -6,7 +6,9 @@
 
 Modern Controls übernimmt die Steuerungs- und Gameplay-Funktionen von Rift Modern und lässt das originale HUD und die originalen Menüs aktiv.
 
-**Neu in 0.3.2:** Munitionsgrenzen bleiben fest auf 3× Originalwert; die Kapazitätsänderung einer bereits installierten Arsenal-Mastery-Mod wird durch die beiliegende Installationshilfe gezielt abgeschaltet. Düsenpack-Schweben ist standardmäßig 10× schneller. Im Schwebemodus schaltet **1× R1** den Flugmodus ein oder aus: **Stick** bewegt waagerecht, **X halten** steigt, **L1 halten** sinkt. Ohne Richtungseingabe hält Ratchet die Höhe. Landen beendet den Flugmodus. Dafür die [Flugunterstützung](https://github.com/Taurus0815/RAC-RS-Mods/raw/refs/heads/main/downloads/modern-controls-flight-support-0.3.2.zip) zusätzlich installieren; [Anleitung](https://github.com/Taurus0815/RAC-RS-Mods/blob/main/native-patch/modern-controls-flight-support/README.md).
+**Neu in 0.3.3:** Die Flugsteuerung unterstützt jetzt auch den tatsächlich verwendeten Düsenpack-Schwebezustand (0x81). R1 entspricht bei der Standard-Tastaturbelegung **linkem Strg**; die Launcher-Belegung bleibt maßgeblich. Steigen und Höhehalten wurden im laufenden Spiel auf Hoven vom Nutzer bestätigt. Auch die Flugunterstützung auf 0.3.3 aktualisieren.
+
+Munitionsgrenzen bleiben fest auf 3× Originalwert; die Kapazitätsänderung einer bereits installierten Arsenal-Mastery-Mod wird durch die beiliegende Installationshilfe gezielt abgeschaltet. Düsenpack-Schweben ist standardmäßig 10× schneller. Im Schwebemodus schaltet **1× R1** den Flugmodus ein oder aus: **Stick** bewegt waagerecht, **X halten** steigt, **L1 halten** sinkt. Ohne Richtungseingabe hält Ratchet die Höhe. Das Verlassen des Schwebemodus beendet den Flugmodus. Dafür die [Flugunterstützung](https://github.com/Taurus0815/RAC-RS-Mods/raw/refs/heads/main/downloads/modern-controls-flight-support-0.3.3.zip) zusätzlich installieren; [Anleitung](https://github.com/Taurus0815/RAC-RS-Mods/blob/main/native-patch/modern-controls-flight-support/README.md).
 
 - Doppelt die vom Launcher belegte Aim-Taste antippen, um dauerhaftes Zielen ein- oder auszuschalten; Gedrückthalten bleibt temporäres Zielen. Voraussetzung ist ein RAC-RS-Build mit der aktuellen Aim-Umschaltung.
 - Zielen halten + Viereck wirft den Schraubenschlüssel über den nativen Comet Strike.
@@ -24,7 +26,9 @@ Modern Controls übernimmt die Steuerungs- und Gameplay-Funktionen von Rift Mode
 
 Modern Controls carries over Rift Modern's control and gameplay features while keeping the original HUD and menus.
 
-**New in 0.3.2:** Ammo limits stay fixed at 3× retail; the companion installer disables the competing ammo-capacity writer in an existing Arsenal Mastery installation. Thruster-Pack gliding defaults to 10× speed. While gliding, **press R1 once** to toggle flight: **stick** moves horizontally, **hold Jump** to ascend and **hold L1** to descend. No directional input holds altitude; landing ends flight. Install the additional [flight support package](https://github.com/Taurus0815/RAC-RS-Mods/raw/refs/heads/main/downloads/modern-controls-flight-support-0.3.2.zip); [instructions](https://github.com/Taurus0815/RAC-RS-Mods/blob/main/native-patch/modern-controls-flight-support/README.md).
+**New in 0.3.3:** Flight now also supports the actual Thruster-Pack hover state (0x81). Default keyboard R1 is **left Ctrl**; launcher mappings remain authoritative. The user confirmed ascent and altitude hold in the running Hoven level. Update the companion flight support to 0.3.3 as well.
+
+Ammo limits stay fixed at 3× retail; the companion installer disables the competing ammo-capacity writer in an existing Arsenal Mastery installation. Thruster-Pack gliding defaults to 10× speed. While gliding, **press R1 once** to toggle flight: **stick** moves horizontally, **hold Jump** to ascend and **hold L1** to descend. No directional input holds altitude; leaving hover ends flight. Install the additional [flight support package](https://github.com/Taurus0815/RAC-RS-Mods/raw/refs/heads/main/downloads/modern-controls-flight-support-0.3.3.zip); [instructions](https://github.com/Taurus0815/RAC-RS-Mods/blob/main/native-patch/modern-controls-flight-support/README.md).
 
 - Double-tap the launcher-mapped Aim action to toggle persistent aim; holding it remains temporary aim. Requires an RAC-RS build with the current Aim toggle.
 - Hold Aim + press Square to throw the Omniwrench with the native Comet Strike.
