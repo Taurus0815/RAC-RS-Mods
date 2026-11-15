@@ -1,4 +1,4 @@
-# Modern Controls 0.2.0
+# Modern Controls 0.2.1
 
 **Ersteller / Author: Taurus0815**
 
@@ -12,6 +12,8 @@ Modern Controls übernimmt die Steuerungs- und Gameplay-Funktionen von Rift Mode
 - Normaler und über Kopf geführter Schraubenschlüssel-Schlag sind beschleunigt.
 - Der Überkopfschlag trifft Kisten erst beim Bodenkontakt und kann nahe Gegner treffen.
 - Vergrößerter, einstellbarer Bolt-Anziehungsradius.
+- Munitionsgrenze jeder Munitionswaffe: 3× Originalwert. Ammo-Kisten geben weiterhin doppelte Munition.
+- Gesammelte Bolts: 10× Ertrag.
 - Das Schnellwahlmenü pausiert beim Halten von Dreieck über die native RAC-RS-Pause. Bei dauerhaftem Zielen fährt die Kamera während der Auswahl aus dem Zoom zurück und stellt den Aim-Modus beim Schließen wieder her.
 
 **Installation:** Ordner `modern-controls` nach `mods` kopieren, im Launcher aktivieren und das Preset **Modern Controls** wählen. Für die Aim-Umschaltung und das Zurückfahren aus dem Aim-Zoom im pausierten Schnellrad muss der installierte RAC-RS-Player den [nativen Patch](https://github.com/Taurus0815/RAC-RS-Mods/blob/main/native-patch/modern-controls-qspause-aim.patch) enthalten. Der Mod ändert keine Launcher-Tastenbelegungen.
@@ -29,8 +31,8 @@ Modern Controls carries over Rift Modern's control and gameplay features while k
 - Quick Select pauses while Triangle is held through RAC-RS's native pause. Persistent Aim zoom eases back while the wheel is open and returns when it closes.
 - Native auto-equip for the Swingshot, Hydrodisplacer and Trespasser.
 - Two normal hits per Nanotech orb; instant-kill falls and crushers are unchanged.
-- Double weapon ammo capacity and double ammo from crates.
-- Half price for vendor ammo and triple newly collected bolt gains.
+- Triple each weapon's original ammo limit and double ammo from crates.
+- Half price for vendor ammo and 10x newly collected bolt gains.
 
 **Install:** Copy `modern-controls` into `mods`, enable it in the launcher and choose the **Modern Controls** preset. Turn on **Auto-equip gadgets** in RAC-RS under Game → Gameplay. Double-tap Aim and the native Quick Select pause require the [RAC-RS patch](https://github.com/Taurus0815/RAC-RS-Mods/blob/main/native-patch/modern-controls-qspause-aim.patch) in the player. Launcher button mappings remain unchanged; Arsenal Mastery is neither required nor included.
 

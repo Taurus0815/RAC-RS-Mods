@@ -12,12 +12,19 @@ local AMMO = {
     { name = "drone_device", id = 24 }, { name = "decoy", id = 25 },
 }
 
+-- Original capacities from RAC-RS's weapon bindings. Never use a previously
+-- modified capacity as a new baseline: reloads and other mods must not compound it.
+local ORIGINAL_CAPS = {
+    bomb_glove = 40, devastator = 20, visibomb = 20, blaster = 200,
+    pyrocitor = 240, mine_glove = 50, tesla_claw = 240, glove_of_doom = 10,
+    ryno = 50, drone_device = 10, decoy = 20,
+}
+
 -- Gadgetron ammo tables from RAC-RS retail/vendor.rs, level order 0..18.
 local PRICE_PAL = { 0x1c4030,0x1c4430,0x1c45b0,0x1c40b0,0x1c4130,0x1c44b0,0x1c4730,0x1c4030,0x1c47b0,0x1c4130,0x1c4430,0x1c49b0,0x1c4430,0x1c42b0,0x1c4730,0x1c45b0,0x1c4430,0x1c48b0,0x1c49b0 }
 local PRICE_NTSC = { 0x1c40b0,0x1c4530,0x1c46b0,0x1c41b0,0x1c4230,0x1c4530,0x1c4830,0x1c4130,0x1c48b0,0x1c4230,0x1c4530,0x1c4ab0,0x1c4530,0x1c43b0,0x1c47b0,0x1c46b0,0x1c4530,0x1c49b0,0x1c4ab0 }
 local BOLT_CAP = 9999999
 
-local retail_caps, written_caps = {}, {}
 local retail_prices, written_prices = {}, {}
 local last_bolts = nil
 local damage_hits = 0
@@ -37,26 +44,20 @@ local function readable_mode()
 end
 
 local function reset_level()
-    retail_caps, written_caps = {}, {}
     retail_prices, written_prices = {}, {}
     dirty = true
 end
 
 local function sync_ammo_caps()
     if not readable_mode() then return end
-    local mult = clamp_setting("ammo_capacity", 2, 1, 4)
+    local mult = clamp_setting("ammo_capacity", 3, 1, 4)
     for _, item in ipairs(AMMO) do
         local ok, current = pcall(function() return omni.fields.omni.weapon[item.name].max_ammo end)
-        if ok and type(current) == "number" and current > 0 then
-            if written_caps[item.name] == nil or current ~= written_caps[item.name] then
-                retail_caps[item.name] = current
-                written_caps[item.name] = nil
-            end
-            local base = retail_caps[item.name] or current
+        if ok and type(current) == "number" and current > 0 and ORIGINAL_CAPS[item.name] then
+            local base = ORIGINAL_CAPS[item.name]
             local desired = math.min(65535, math.floor(base * mult + 0.5))
             if desired ~= current then
                 pcall(function() omni.fields.omni.weapon[item.name].max_ammo = desired end)
-                written_caps[item.name] = desired
             end
             pcall(function()
                 local box = omni.fields.omni.hud.ammo_box
@@ -108,7 +109,7 @@ local function multiply_bolts()
     end
     local gained = current - last_bolts
     if gained > 0 then
-        local mult = clamp_setting("bolt_pickup_multiplier", 3, 1, 5)
+        local mult = clamp_setting("bolt_pickup_multiplier", 10, 1, 10)
         local desired = math.min(BOLT_CAP, current + math.floor(gained * (mult - 1) + 0.5))
         if desired ~= current then pcall(function() omni.fields.bolts = desired end) end
         last_bolts = desired
@@ -148,6 +149,7 @@ function M.setup()
             omni.hook("rac1.omni.ammo.collect", function(original, moby) return inside_pickup(original, moby) end)
         end
         omni.hook("rac1.omni.ammo.add", function(original, item, amount)
+            sync_ammo_caps()
             if in_ammo_pickup and type(amount) == "number" and amount > 0 then
                 amount = math.min(65535, math.floor(amount * clamp_setting("ammo_pickup_multiplier", 2, 1, 4) + 0.5))
             end
@@ -162,14 +164,14 @@ function M.setup()
     omni.on("mode", function() last_bolts = nil end)
     omni.on_frame(function()
         tick += 1
+        sync_ammo_caps()
         if dirty or tick % 30 == 0 then
             dirty = false
-            sync_ammo_caps()
             sync_prices()
         end
         multiply_bolts()
     end)
-    omni.log("Modern Controls: extra health, expanded ammo, cheaper ammo and 3x bolt gains ready")
+    omni.log("Modern Controls: extra health, 3x original ammo capacity, cheaper ammo and 10x bolt gains ready")
 end
 
 return M

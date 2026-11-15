@@ -2,9 +2,9 @@
   "format": 2,
   "id": "modern-controls",
   "name": "Modern Controls",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": "Taurus0815",
-  "description": "Modern controls and gameplay: responsive movement, double-tap aim, faster wrench actions, extra health, expanded ammo, cheaper ammo, auto gadgets and 3x bolt gains. Original HUD and menus retained.",
+  "description": "Modern controls and gameplay: responsive movement, double-tap aim, faster wrench actions, extra health, expanded ammo, cheaper ammo, auto gadgets and 10x bolt gains. Original HUD and menus retained.",
   "license": "MIT",
   "type": "script",
   "api": "1.3",
@@ -69,9 +69,9 @@
       "description": "Two ordinary damage hits remove one Nanotech orb. Instant-kill falls and crushers still work normally."
     },
     {
-      "key": "ammo_capacity", "name": "Ammo capacity multiplier", "type": "float", "default": 2,
+      "key": "ammo_capacity", "name": "Ammo capacity multiplier", "type": "float", "default": 3,
       "min": 1, "max": 4, "step": 0.25,
-      "description": "Maximum ammo for weapons that use ammunition."
+      "description": "Multiplier of each weapon's original ammo limit."
     },
     {
       "key": "ammo_pickup_multiplier", "name": "Ammo from crates", "type": "float", "default": 2,
@@ -84,8 +84,8 @@
       "description": "Vendor ammo price as a fraction of the original price."
     },
     {
-      "key": "bolt_pickup_multiplier", "name": "Bolts collected multiplier", "type": "float", "default": 3,
-      "min": 1, "max": 5, "step": 0.25,
+      "key": "bolt_pickup_multiplier", "name": "Bolts collected multiplier", "type": "float", "default": 10,
+      "min": 1, "max": 10, "step": 0.25,
       "description": "Multiplier for newly collected bolts."
     }
   ],
@@ -97,8 +97,8 @@
         "modern_movement": true, "movement_response": 8.8, "movement_key": "KeyJ",
         "aim_wrench_throw": true, "wrench_speed": 4, "slam_speed": 4,
         "slam_crate_radius": 7, "slam_enemy_radius": 3, "bolt_radius": 3,
-        "extra_health": true, "ammo_capacity": 2, "ammo_pickup_multiplier": 2,
-        "ammo_price_multiplier": 0.5, "bolt_pickup_multiplier": 3
+        "extra_health": true, "ammo_capacity": 3, "ammo_pickup_multiplier": 2,
+        "ammo_price_multiplier": 0.5, "bolt_pickup_multiplier": 10
       }
     }
   ]

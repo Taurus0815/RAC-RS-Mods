@@ -12,7 +12,7 @@ Direkte ZIP-Downloads / Direct ZIP downloads:
 
 | Paket / Package | Version | Download |
 | --- | --- | --- |
-| Modern Controls | 0.2.0 | [modern-controls-0.2.0.zip](downloads/modern-controls-0.2.0.zip) |
+| Modern Controls | 0.2.1 | [modern-controls-0.2.1.zip](downloads/modern-controls-0.2.1.zip) |
 | Rift Modern | 0.15.0 | [rift-modern-0.15.0.zip](https://github.com/Taurus0815/RAC-RS-Mods/raw/refs/heads/main/downloads/rift-modern-0.15.0.zip) |
 | HQ Texture Remake — **beide Teile / both parts** | 2.0.0 | [Teil 1 / Part 1](https://github.com/Taurus0815/RAC-RS-Mods/releases/download/hq-texture-remake-v2.0.0/hq-texture-remake-2.0.0-part01.zip) · [Teil 2 / Part 2](https://github.com/Taurus0815/RAC-RS-Mods/releases/download/hq-texture-remake-v2.0.0/hq-texture-remake-2.0.0-part02.zip) |
 | HQ Texture Remake Lite — Figuren/Waffen / characters/weapons | 1.0.0 | [hq-texture-remake-1.0.0.zip](https://github.com/Taurus0815/RAC-RS-Mods/raw/refs/heads/main/downloads/hq-texture-remake-1.0.0.zip) |
@@ -24,9 +24,9 @@ Direkte ZIP-Downloads / Direct ZIP downloads:
 
 ### Modern Controls
 
-**0.2.0:** Übernimmt die Bewegungs-, Aim-, Schraubenschlüssel- und Bolt-Anziehungsfunktionen von Rift Modern. Dazu kommen zwei normale Treffer pro Nanotech-Orb, doppelte Munitionskapazität und Ammo-Kisten, halbe Ammo-Shop-Preise und dreifache Boltzuwächse. RAC-RS Auto-equip schaltet Swingshot, Hydrodisplacer und Trespasser bei Bedarf ein. Das originale HUD und die Menüs bleiben aktiv. Arsenal Mastery ist nicht erforderlich und wird nicht mitgeliefert.
+**0.2.1:** Übernimmt die Bewegungs-, Aim-, Schraubenschlüssel- und Bolt-Anziehungsfunktionen von Rift Modern. Dazu kommen zwei normale Treffer pro Nanotech-Orb, dreifache Original-Munitionsgrenzen und doppelte Ammo-Kisten, halbe Ammo-Shop-Preise und zehnfache Boltzuwächse. RAC-RS Auto-equip schaltet Swingshot, Hydrodisplacer und Trespasser bei Bedarf ein. Das originale HUD und die Menüs bleiben aktiv. Arsenal Mastery ist nicht erforderlich und wird nicht mitgeliefert.
 
-**Installation:** [ZIP herunterladen](downloads/modern-controls-0.2.0.zip), entpacken, `modern-controls` nach `mods` kopieren und im Launcher aktivieren. Unter Spiel → Gameplay die native Option **Auto-equip gadgets** einschalten. Der [RAC-RS-Patch](native-patch/modern-controls-qspause-aim.patch) unterstützt Aim-Umschaltung und die Schnellwahl-Pause; er ändert keine Tastenbelegung.
+**Installation:** [ZIP herunterladen](downloads/modern-controls-0.2.1.zip), entpacken, `modern-controls` nach `mods` kopieren und im Launcher aktivieren. Unter Spiel → Gameplay die native Option **Auto-equip gadgets** einschalten. Der [RAC-RS-Patch](native-patch/modern-controls-qspause-aim.patch) unterstützt Aim-Umschaltung und die Schnellwahl-Pause; er ändert keine Tastenbelegung.
 
 ### Rift Modern
 
@@ -56,9 +56,9 @@ Geprüft mit RAC-RS 0.5.1, PAL SCES-50916 v1.00, OmniLoader 0.1.0, Host-ABI 1.6 
 
 ### Modern Controls
 
-**0.2.0:** Carries over Rift Modern's movement, Aim, wrench and bolt-attraction features. It adds two ordinary hits per Nanotech orb, double weapon ammo capacity and crate ammo, half-price vendor ammo and triple bolt gains. RAC-RS auto-equip handles the Swingshot, Hydrodisplacer and Trespasser when needed. Original HUD and menus stay active. Arsenal Mastery is not required or included.
+**0.2.1:** Carries over Rift Modern's movement, Aim, wrench and bolt-attraction features. It adds two ordinary hits per Nanotech orb, triple original weapon ammo limits and double crate ammo, half-price vendor ammo and 10x bolt gains. RAC-RS auto-equip handles the Swingshot, Hydrodisplacer and Trespasser when needed. Original HUD and menus stay active. Arsenal Mastery is not required or included.
 
-**Install:** [Download the ZIP](downloads/modern-controls-0.2.0.zip), extract it, copy `modern-controls` to `mods` and enable it in the launcher. Turn on RAC-RS's native **Auto-equip gadgets** under Game → Gameplay. The [RAC-RS patch](native-patch/modern-controls-qspause-aim.patch) supports Aim toggle and Quick Select pause; it does not change button mappings.
+**Install:** [Download the ZIP](downloads/modern-controls-0.2.1.zip), extract it, copy `modern-controls` to `mods` and enable it in the launcher. Turn on RAC-RS's native **Auto-equip gadgets** under Game → Gameplay. The [RAC-RS patch](native-patch/modern-controls-qspause-aim.patch) supports Aim toggle and Quick Select pause; it does not change button mappings.
 
 ### Rift Modern
 
