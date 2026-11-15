@@ -1,0 +1,68 @@
+diff --git a/rac-rs/src/rac1/retail/qs_pause.rs b/rac-rs/src/rac1/retail/qs_pause.rs
+--- a/rac-rs/src/rac1/retail/qs_pause.rs
++++ b/rac-rs/src/rac1/retail/qs_pause.rs
+@@ -9,9 +9,9 @@
+ //! Kerwan FUN_002841f0) tests before each world step [C Kerwan OV:108911-108952]: bit 1 the hero update, bit 2 the moby update
+ //! loop with the moby slots, the voice queue, the ambience and the frame counter, bit 4 the particles, bit 8 the camera. The level
+ //! start sets it to 0xf (Kerwan OV:49043); only retail's debug menu writes other values. For a field that starts with the ring up
+-//! and Triangle held the word is 0, and after the field it is 0xf again. That tick still reads the pad, opens the pause menu or the
+-//! map, runs the HUD (the ring opens, turns, picks), the help boxes, sound and the lights (both follow the frozen hero and camera);
+-//! no moby (enemies, projectiles, platforms), particle, the hero, the camera or the frame counter moves. The field in which Triangle
++//! and Triangle held the word is 8: only the camera updates so a persistent Aim zoom can ease back to the normal view; after the
++//! field it is 0xf again. The tick still reads the pad, opens the pause menu or the map, runs the HUD (the ring opens, turns, picks),
++//! the help boxes, sound and the lights; no moby (enemies, projectiles, platforms), particle, hero or frame counter moves. The field in which Triangle
+ //! is let go runs as retail's (the equip, the fade-out with the world running), and everything goes on from where it stood.
+ //! In a frozen field the mouse look is dropped (`worker/field_run.rs`): the camera does not turn and nothing piles up for the close.
+ //!
+@@ -38,6 +38,8 @@
+ const GAME_MODE: u32 = 0x15f5a4;
+ /// The mask in play (level start): hero 1, mobys + frame counter 2, particles 4, camera 8.
+ const PLAY: u32 = 0xf;
++/// Keep only the camera update alive during Quick Select, so its pose can leave persistent Aim without advancing gameplay.
++const CAMERA_ONLY: u32 = 8;
+ /// Triangle in the game's button word (`Machine::set_pad` stores it inverted).
+ const TRIANGLE: u16 = 0x10;
+ 
+@@ -90,7 +92,7 @@
+ 
+ /// Pure: the mask word after a frozen field: put back to the play value when it still holds our 0, else the game wrote it (kept).
+ fn put_back(now: u32) -> Option<u32> {
+-	(now == 0).then_some(PLAY)
++	(now == CAMERA_ONLY).then_some(PLAY)
+ }
+ 
+ /// Triangle held in the pad the field reads (`Machine::set_pad`: bytes 0 / 1 = the inverted button word, high byte first).
+@@ -98,7 +100,7 @@
+ 	pad.is_some_and(|r| !(u16::from(r[0]) << 8 | u16::from(r[1])) & TRIANGLE != 0)
+ }
+ 
+-/// Before a level field: Some(mask address) when the field runs frozen (the word is 0 now).
++/// Before a level field: Some(mask address) when gameplay is frozen (only the camera update remains enabled).
+ fn start(mem: &mut Mem, level: u32, on: bool, pad: Option<[u8; 18]>) -> Option<u32> {
+ 	let a = va(*MASK.get(level as usize)?);
+ 	// The camera word sits in the same aligned run on both discs (+0xc there too: lane nfeat1 usa_mask.py, all 19 levels).
+@@ -107,7 +109,7 @@
+ 	let ring = super::wheel_mouse::open_in(level, |x| ram.get((x & 0x01ff_ffff) as usize).copied().unwrap_or(0));
+ 	let s = Seen { on, mode, mask, cam, ring, triangle: triangle(pad) };
+ 	wants(&s).then(|| {
+-		mem.wr32(a, 0);
++		mem.wr32(a, CAMERA_ONLY);
+ 		a
+ 	})
+ }
+diff --git a/rac-rs/src/rac1/retail/modcam.rs b/rac-rs/src/rac1/retail/modcam.rs
+--- a/rac-rs/src/rac1/retail/modcam.rs
++++ b/rac-rs/src/rac1/retail/modcam.rs
+@@ -1685,6 +1685,12 @@
+ 	let Ok(mut st) = ST.lock() else { return };
+ 	st.field = st.field.wrapping_add(1);
+ 	st.inp = fin.mc;
++	// Quick Select pause leaves only the camera update running. Temporarily suppress Aim for that camera step so a persistent
++	// double-tap Aim returns to the normal shoulder view while the wheel is open; the pad latch itself remains intact and resumes
++	// Aim when Quick Select closes.
++	if super::qs_pause::frozen() {
++		st.inp.aim = false;
++	}
+ 	st.rstick = [fin.sticks[0], fin.sticks[1]];
+ 	st.lstick = [fin.sticks[2], fin.sticks[3]];
+ 	if fin.mc.toggle {

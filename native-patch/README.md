@@ -67,3 +67,16 @@ git apply -p1 C:\path\to\RAC-RS-Mods\native-patch\rift-modern-rac-rs-0.5.1.patch
 ```
 
 Then rebuild the existing RAC-RS Windows target using its normal setup/build process. The patch was checked against the matching 0.5.1 source and compiled into the local Windows build. The mod ZIP itself contains the PNG assets but not a game executable. On an unpatched build the wheel falls back to original game artwork.
+
+## Modern Controls 0.1.1 — Quick Select Aim view
+
+`modern-controls-qspause-aim.patch` keeps only the camera update active while native Quick Select pause is open and suppresses Aim for that camera update. This lets the view return from persistent double-tap Aim zoom while the world remains paused; the Aim latch is retained and restored when the wheel closes. Set `qspause=on` in the RAC-RS player options. Existing launcher button mappings are not changed.
+
+From the RAC-RS 0.5.1 source root, apply the patch and rebuild the player:
+
+```powershell
+git apply --check -p1 PATH/TO/modern-controls-qspause-aim.patch
+git apply -p1 PATH/TO/modern-controls-qspause-aim.patch
+```
+
+The patch is source only and does not include a game executable or disc data.
