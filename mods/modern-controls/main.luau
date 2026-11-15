@@ -9,6 +9,7 @@ require("melee").setup()
 require("magnet").setup()
 require("slam").setup()
 require("survival").setup()
+require("flight").setup()
 -- Quick Select pause is handled by RAC-RS itself (`qspause=on`), so the native camera
 -- can leave persistent Aim while the wheel is open.
 

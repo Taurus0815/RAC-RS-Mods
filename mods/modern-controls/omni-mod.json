@@ -2,15 +2,24 @@
   "format": 2,
   "id": "modern-controls",
   "name": "Modern Controls",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "author": "Taurus0815",
-  "description": "Modern controls and gameplay: responsive movement, double-tap aim, faster wrench actions, extra health, expanded ammo, cheaper ammo, auto gadgets and 10x bolt gains. Original HUD and menus retained.",
+  "description": "Modern Controls: responsive movement, fixed 3x original ammo limits, 10x bolts, 10x Thruster-Pack glide and double-tap Jump free flight. Original HUD and menus retained.",
   "license": "MIT",
   "type": "script",
   "api": "1.3",
-  "scripts": ["main.luau"],
-  "games": { "rac1": ["pal", "ntsc"] },
-  "hooks": ["rac1.player.approach_speed"],
+  "scripts": [
+    "main.luau"
+  ],
+  "games": {
+    "rac1": [
+      "pal",
+      "ntsc"
+    ]
+  },
+  "hooks": [
+    "rac1.player.approach_speed"
+  ],
   "optional_hooks": [
     "rac1.player.advance_animation",
     "rac1.omni.hero.items_attach",
@@ -20,73 +29,154 @@
     "rac1.player.take_damage",
     "rac1.omni.ammo.pickup",
     "rac1.omni.ammo.collect",
-    "rac1.omni.ammo.add"
+    "rac1.omni.ammo.add",
+    "rac1.player.set_planar_velocity",
+    "rac1.player.apply_vertical_motion"
   ],
   "settings": [
     {
-      "key": "modern_movement", "name": "Responsive movement", "type": "bool", "default": true,
+      "key": "modern_movement",
+      "name": "Responsive movement",
+      "type": "bool",
+      "default": true,
       "description": "Faster acceleration and braking while grounded. Does not replace camera or strafe aiming."
     },
     {
-      "key": "movement_response", "name": "Movement response", "type": "float", "default": 8.8,
-      "min": 1, "max": 8.8, "step": 0.1
+      "key": "movement_response",
+      "name": "Movement response",
+      "type": "float",
+      "default": 8.8,
+      "min": 1,
+      "max": 8.8,
+      "step": 0.1
     },
     {
-      "key": "movement_key", "name": "Toggle movement key", "type": "keybind", "default": "KeyJ",
+      "key": "movement_key",
+      "name": "Toggle movement key",
+      "type": "keybind",
+      "default": "KeyJ",
       "description": "Toggle the movement response without changing launcher bindings."
     },
     {
-      "key": "aim_wrench_throw", "name": "Aim + melee: wrench throw", "type": "bool", "default": true,
+      "key": "aim_wrench_throw",
+      "name": "Aim + melee: wrench throw",
+      "type": "bool",
+      "default": true,
       "description": "Hold the launcher-mapped Aim action and press Square/X to perform the native Comet Strike."
     },
     {
-      "key": "wrench_speed", "name": "Normal wrench swing speed", "type": "float", "default": 4,
-      "min": 1, "max": 4, "step": 0.05,
+      "key": "wrench_speed",
+      "name": "Normal wrench swing speed",
+      "type": "float",
+      "default": 4,
+      "min": 1,
+      "max": 4,
+      "step": 0.05,
       "description": "Grounded swings only; damage is unchanged."
     },
     {
-      "key": "slam_speed", "name": "Overhead wrench speed", "type": "float", "default": 4,
-      "min": 1, "max": 4, "step": 0.05,
+      "key": "slam_speed",
+      "name": "Overhead wrench speed",
+      "type": "float",
+      "default": 4,
+      "min": 1,
+      "max": 4,
+      "step": 0.05,
       "description": "Jump + wrench animation speed; preserves native landing physics."
     },
     {
-      "key": "slam_crate_radius", "name": "Overhead crate radius (m)", "type": "float", "default": 7,
-      "min": 0, "max": 10, "step": 0.5,
+      "key": "slam_crate_radius",
+      "name": "Overhead crate radius (m)",
+      "type": "float",
+      "default": 7,
+      "min": 0,
+      "max": 10,
+      "step": 0.5,
       "description": "Extra crate wave when the overhead strike lands."
     },
     {
-      "key": "slam_enemy_radius", "name": "Overhead enemy radius (m)", "type": "float", "default": 3,
-      "min": 0, "max": 5, "step": 0.25,
+      "key": "slam_enemy_radius",
+      "name": "Overhead enemy radius (m)",
+      "type": "float",
+      "default": 3,
+      "min": 0,
+      "max": 5,
+      "step": 0.25,
       "description": "Native wrench damage to nearby enemies on ground impact."
     },
     {
-      "key": "bolt_radius", "name": "Bolt attraction radius", "type": "float", "default": 3,
-      "min": 1, "max": 3, "step": 0.25,
+      "key": "bolt_radius",
+      "name": "Bolt attraction radius",
+      "type": "float",
+      "default": 3,
+      "min": 1,
+      "max": 3,
+      "step": 0.25,
       "description": "Multiplier for native bolt magnet distance and height."
     },
     {
-      "key": "extra_health", "name": "Extra health", "type": "bool", "default": true,
+      "key": "extra_health",
+      "name": "Extra health",
+      "type": "bool",
+      "default": true,
       "description": "Two ordinary damage hits remove one Nanotech orb. Instant-kill falls and crushers still work normally."
     },
     {
-      "key": "ammo_capacity", "name": "Ammo capacity multiplier", "type": "float", "default": 3,
-      "min": 1, "max": 4, "step": 0.25,
+      "key": "ammo_capacity",
+      "name": "Ammo capacity multiplier",
+      "type": "float",
+      "default": 3,
+      "min": 1,
+      "max": 4,
+      "step": 0.25,
       "description": "Multiplier of each weapon's original ammo limit."
     },
     {
-      "key": "ammo_pickup_multiplier", "name": "Ammo from crates", "type": "float", "default": 2,
-      "min": 1, "max": 4, "step": 0.25,
+      "key": "ammo_pickup_multiplier",
+      "name": "Ammo from crates",
+      "type": "float",
+      "default": 2,
+      "min": 1,
+      "max": 4,
+      "step": 0.25,
       "description": "Ammo received from ammo crates."
     },
     {
-      "key": "ammo_price_multiplier", "name": "Ammo shop price multiplier", "type": "float", "default": 0.5,
-      "min": 0.25, "max": 1, "step": 0.05,
+      "key": "ammo_price_multiplier",
+      "name": "Ammo shop price multiplier",
+      "type": "float",
+      "default": 0.5,
+      "min": 0.25,
+      "max": 1,
+      "step": 0.05,
       "description": "Vendor ammo price as a fraction of the original price."
     },
     {
-      "key": "bolt_pickup_multiplier", "name": "Bolts collected multiplier", "type": "float", "default": 10,
-      "min": 1, "max": 10, "step": 0.25,
+      "key": "bolt_pickup_multiplier",
+      "name": "Bolts collected multiplier",
+      "type": "float",
+      "default": 10,
+      "min": 1,
+      "max": 10,
+      "step": 0.25,
       "description": "Multiplier for newly collected bolts."
+    },
+    {
+      "step": 0.5,
+      "default": 10,
+      "min": 1,
+      "type": "float",
+      "key": "hover_speed",
+      "description": "Planar speed multiplier while gliding with the worn Thruster-Pack.",
+      "max": 10,
+      "name": "Thruster-Pack glide speed"
+    },
+    {
+      "type": "bool",
+      "description": "While gliding, double-tap Jump to toggle flight. Hold Jump to ascend and L1 to descend. Requires flight support.",
+      "name": "Double-tap Jump for free flight",
+      "key": "free_flight",
+      "default": true
     }
   ],
   "presets": [
@@ -94,11 +184,22 @@
       "id": "modern_controls",
       "name": "Modern Controls",
       "values": {
-        "modern_movement": true, "movement_response": 8.8, "movement_key": "KeyJ",
-        "aim_wrench_throw": true, "wrench_speed": 4, "slam_speed": 4,
-        "slam_crate_radius": 7, "slam_enemy_radius": 3, "bolt_radius": 3,
-        "extra_health": true, "ammo_capacity": 3, "ammo_pickup_multiplier": 2,
-        "ammo_price_multiplier": 0.5, "bolt_pickup_multiplier": 10
+        "modern_movement": true,
+        "movement_response": 8.8,
+        "movement_key": "KeyJ",
+        "aim_wrench_throw": true,
+        "wrench_speed": 4,
+        "slam_speed": 4,
+        "slam_crate_radius": 7,
+        "slam_enemy_radius": 3,
+        "bolt_radius": 3,
+        "extra_health": true,
+        "ammo_capacity": 3,
+        "ammo_pickup_multiplier": 2,
+        "ammo_price_multiplier": 0.5,
+        "bolt_pickup_multiplier": 10,
+        "hover_speed": 10,
+        "free_flight": true
       }
     }
   ]
