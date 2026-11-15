@@ -4,18 +4,19 @@
 local M = {}
 local layout = require("layout")
 local CROSS, DESCEND = 0x40, 0x4 -- mapped Jump / L1
+local TRIGGER = 0x8 -- R1; consume only during Thruster-Pack glide
 
 function M.setup()
     local tps = omni.ticks_per_second() or 50
     local window = math.floor(tps * 0.38 + 0.5)
-    local ticks, previous, first, grace = 0, false, nil, nil
-    local active, exit_release = false, false
+    local ticks, previous, last_press, grace, taps = 0, false, nil, nil, 0
+    local active = false
     local jump, descend, magnitude = false, false, 0
     local warned = false
 
     local function reset()
-        active, first, grace = false, nil, nil
-        previous, exit_release = false, false
+        active, last_press, grace, taps = false, nil, nil, 0
+        previous = false
         jump, descend, magnitude = false, false, 0
     end
 
@@ -52,26 +53,30 @@ function M.setup()
             reset()
             return
         end
-        if jump and not previous and not exit_release then
-            if first and ticks - first <= window then
+        local trigger = bit32.band(down, TRIGGER) ~= 0
+        if trigger and not previous then
+            taps = last_press and ticks - last_press <= window and taps + 1 or 1
+            last_press, grace = ticks, ticks + window
+            if taps == 3 then
                 if omni.has("rac1.player.apply_vertical_motion") then
                     active = not active
-                    exit_release = not active
                     omni.log("free flight " .. (active and "on" or "off"))
                 elseif not warned then
                     warned = true
                     omni.warn("free flight needs the companion flight-support binding next to the player")
                 end
-                first, grace = nil, nil
-            else
-                first, grace = ticks, ticks + window
+                last_press, grace, taps = nil, nil, 0
             end
         end
-        previous = jump
-        if exit_release then
-            set_cross(report, down, false)
-            if not jump then exit_release = false end
-        elseif active or (grace and ticks <= grace) then
+        previous = trigger
+        if trigger then
+            -- Native R1 crouches/cancels glide. Swallow it here so the first two
+            -- presses cannot interrupt the gesture; outside glide it is untouched.
+            down = bit32.band(down, bit32.bnot(TRIGGER))
+            set_cross(report, down, jump)
+            buffer.writeu8(report, 15, 0)
+        end
+        if active or (grace and ticks <= grace) then
             -- Keep the native glide alive between taps and while flying hands-off.
             set_cross(report, down, true)
             if active and descend then

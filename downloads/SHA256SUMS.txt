@@ -13,3 +13,5 @@ dbd946f6eba47102392c3a8d72d464640f3c860850a971d6045da008978baac2  modern-control
 2e8fc2c36962492fa660b066dd31443e11bfe91bc069540aeb839477dc76dc92  modern-controls-0.2.1.zip
 944096023f38806d6a16a2e2e73a013de4ffb77c36f8c3d113104f15109efc04  modern-controls-0.3.0.zip
 bb173236993995b333678c4d289e7e7dd987e2df051ca7e3dea37c45d170dc3f  modern-controls-flight-support-0.3.0.zip
+61e6555cfc368874ff81ea39c675a5dcf59bd96fb0109ffec4f5e9a80efaabc0  modern-controls-0.3.1.zip
+101790444a7de6e0579be9da0cb1bed1ecb50ac2eb85666583151959bedd9a15  modern-controls-flight-support-0.3.1.zip
